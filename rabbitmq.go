@@ -159,11 +159,13 @@ func sendToGlobalRabbitWithInstanceInfo(originalJsonData []byte, eventType strin
 		return
 	}
 
-	// Get instance name from cache if available
+	// Get instance name and ownerId from cache if available
 	instanceName := ""
+	ownerId := ""
 	userinfo, found := userinfocache.Get(token)
 	if found {
 		instanceName = userinfo.(Values).Get("Name")
+		ownerId = userinfo.(Values).Get("Jid")
 	}
 
 	// Parse original JSON data
@@ -180,6 +182,7 @@ func sendToGlobalRabbitWithInstanceInfo(originalJsonData []byte, eventType strin
 		"instanceId":   userID,
 		"instanceName": instanceName,
 		"token":        token,
+		"ownerId":      ownerId,
 	}
 
 	// Marshal enhanced payload
@@ -205,6 +208,7 @@ func sendToGlobalRabbitWithInstanceInfo(originalJsonData []byte, eventType strin
 			Str("queue", queueName).
 			Str("instanceId", userID).
 			Str("instanceName", instanceName).
+			Str("ownerId", ownerId).
 			Msg("Failed to publish to RabbitMQ")
 	} else {
 		log.Debug().
@@ -212,6 +216,7 @@ func sendToGlobalRabbitWithInstanceInfo(originalJsonData []byte, eventType strin
 			Str("queue", queueName).
 			Str("instanceId", userID).
 			Str("instanceName", instanceName).
+			Str("ownerId", ownerId).
 			Msg("Published enhanced message to RabbitMQ")
 	}
 }
