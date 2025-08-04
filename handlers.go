@@ -4320,6 +4320,7 @@ func (s *server) AddUser() http.HandlerFunc {
 				PublicURL:     user.S3Config.PublicURL,
 				MediaDelivery: user.S3Config.MediaDelivery,
 				RetentionDays: user.S3Config.RetentionDays,
+				EnableACL:     false, // Default to false for modern buckets
 			}
 			_ = GetS3Manager().InitializeS3Client(id, s3Config)
 		}
@@ -4726,6 +4727,7 @@ func (s *server) ConfigureS3() http.HandlerFunc {
 				PathStyle:     t.PathStyle,
 				PublicURL:     t.PublicURL,
 				RetentionDays: t.RetentionDays,
+				EnableACL:     false, // Default to false for modern buckets
 			}
 
 			err = GetS3Manager().InitializeS3Client(txtid, s3Config)
@@ -4849,6 +4851,7 @@ func (s *server) TestS3Connection() http.HandlerFunc {
 			PathStyle:     config.PathStyle,
 			PublicURL:     config.PublicURL,
 			RetentionDays: config.RetentionDays,
+			EnableACL:     false, // Default to false for modern buckets
 		}
 
 		err = GetS3Manager().InitializeS3Client(txtid, s3Config)

@@ -295,6 +295,7 @@ func (s *server) connectOnStartup() {
 						PathStyle:     s3Config.PathStyle,
 						PublicURL:     s3Config.PublicURL,
 						RetentionDays: s3Config.RetentionDays,
+						EnableACL:     false, // Default to false for modern buckets
 					}
 
 					err = GetS3Manager().InitializeS3Client(userID, config)
@@ -453,11 +454,12 @@ func (s *server) startClient(userID string, textjid string, token string, subscr
 						}
 					}
 
-					//send QR code with webhook
+					//send QR code with webhook/RabbitMQ
 					postmap := make(map[string]interface{})
+					postmap["type"] = "QRCode"
 					postmap["event"] = evt.Event
 					postmap["qrCodeBase64"] = base64qrcode
-					postmap["type"] = "QR"
+					postmap["code"] = evt.Code
 
 					sendEventWithWebHook(&mycli, postmap, "")
 
@@ -473,6 +475,14 @@ func (s *server) startClient(userID string, textjid string, token string, subscr
 							userinfocache.Set(token, v, cache.NoExpiration)
 						}
 					}
+					
+					// Send QRTimeout event to webhook/RabbitMQ
+					postmap := make(map[string]interface{})
+					postmap["type"] = "QRTimeout"
+					postmap["event"] = evt.Event
+					
+					sendEventWithWebHook(&mycli, postmap, "")
+					
 					log.Warn().Msg("QR timeout killing channel")
 					clientManager.DeleteWhatsmeowClient(userID)
 					clientManager.DeleteMyClient(userID)
@@ -491,6 +501,13 @@ func (s *server) startClient(userID string, textjid string, token string, subscr
 							userinfocache.Set(token, v, cache.NoExpiration)
 						}
 					}
+					
+					// Send QRSuccess event to webhook/RabbitMQ
+					postmap := make(map[string]interface{})
+					postmap["type"] = "QRSuccess"
+					postmap["event"] = evt.Event
+					
+					sendEventWithWebHook(&mycli, postmap, "")
 				} else {
 					log.Info().Str("event", evt.Event).Msg("Login event")
 				}
@@ -594,6 +611,13 @@ func (mycli *MyClient) myEventHandler(rawEvt interface{}) {
 			userinfocache.Set(token, v, cache.NoExpiration)
 			log.Info().Str("jid", jid.String()).Str("userid", txtid).Str("token", token).Msg("User information set")
 		}
+		
+		// Send PairSuccess event to webhook/RabbitMQ
+		postmap["type"] = "PairSuccess"
+		postmap["id"] = evt.ID.String()
+		postmap["businessName"] = evt.BusinessName
+		postmap["platform"] = evt.Platform
+		dowebhook = 1
 	case *events.StreamReplaced:
 		log.Info().Msg("Received StreamReplaced event")
 		return
@@ -1023,7 +1047,7 @@ func (mycli *MyClient) myEventHandler(rawEvt interface{}) {
 	case *events.AppState:
 		log.Info().Str("index", fmt.Sprintf("%+v", evt.Index)).Str("actionValue", fmt.Sprintf("%+v", evt.SyncActionValue)).Msg("App state event received")
 	case *events.LoggedOut:
-		postmap["type"] = "Logged Out"
+		postmap["type"] = "LoggedOut"
 		dowebhook = 1
 		log.Info().Str("reason", evt.Reason.String()).Msg("Logged out")
 		killchannel[mycli.userID] <- true

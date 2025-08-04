@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -27,6 +28,7 @@ type S3Config struct {
 	PublicURL     string
 	MediaDelivery string
 	RetentionDays int
+	EnableACL     bool // Enable setting ACL on uploaded objects (for legacy buckets)
 }
 
 // S3Manager manages S3 operations
@@ -57,24 +59,54 @@ func (m *S3Manager) InitializeS3Client(userID string, config *S3Config) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	// Use global environment variables for credentials
+	globalAccessKey := os.Getenv(S3_GLOBAL_ACCESS_KEY)
+	globalSecretKey := os.Getenv(S3_GLOBAL_SECRET_KEY)
+	
+	// Fallback to user-specific credentials if global ones are not set
+	accessKey := globalAccessKey
+	secretKey := globalSecretKey
+	if accessKey == "" {
+		accessKey = config.AccessKey
+	}
+	if secretKey == "" {
+		secretKey = config.SecretKey
+	}
+
+	// Validate that we have credentials
+	if accessKey == "" || secretKey == "" {
+		return fmt.Errorf("S3 credentials not available - set %s and %s environment variables or configure user-specific credentials", S3_GLOBAL_ACCESS_KEY, S3_GLOBAL_SECRET_KEY)
+	}
+
 	// Create custom credentials provider
 	credProvider := credentials.NewStaticCredentialsProvider(
-		config.AccessKey,
-		config.SecretKey,
+		accessKey,
+		secretKey,
 		"",
 	)
 
+	// Use global environment variables for region/endpoint if available
+	region := config.Region
+	if globalRegion := os.Getenv(S3_GLOBAL_REGION); globalRegion != "" {
+		region = globalRegion
+	}
+
+	endpoint := config.Endpoint
+	if globalEndpoint := os.Getenv(S3_GLOBAL_ENDPOINT); globalEndpoint != "" {
+		endpoint = globalEndpoint
+	}
+
 	// Configure S3 client
 	cfg := aws.Config{
-		Region:      config.Region,
+		Region:      region,
 		Credentials: credProvider,
 	}
 
-	if config.Endpoint != "" {
+	if endpoint != "" {
 		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 			if service == s3.ServiceID {
 				return aws.Endpoint{
-					URL:               config.Endpoint,
+					URL:               endpoint,
 					HostnameImmutable: config.PathStyle,
 				}, nil
 			}
@@ -91,7 +123,13 @@ func (m *S3Manager) InitializeS3Client(userID string, config *S3Config) error {
 	m.clients[userID] = client
 	m.configs[userID] = config
 
-	log.Info().Str("userID", userID).Str("bucket", config.Bucket).Msg("S3 client initialized")
+	log.Info().
+		Str("userID", userID).
+		Str("bucket", config.Bucket).
+		Str("region", region).
+		Str("endpoint", endpoint).
+		Bool("using_global_credentials", globalAccessKey != "").
+		Msg("S3 client initialized")
 	return nil
 }
 
@@ -214,7 +252,11 @@ func (m *S3Manager) UploadToS3(ctx context.Context, userID string, key string, d
 		Body:         bytes.NewReader(data),
 		ContentType:  aws.String(contentType),
 		CacheControl: aws.String("public, max-age=3600"),
-		ACL:          types.ObjectCannedACLPublicRead,
+	}
+
+	// Only set ACL if explicitly enabled (for legacy bucket compatibility)
+	if config.EnableACL {
+		input.ACL = types.ObjectCannedACLPublicRead
 	}
 
 	if expires != nil {
@@ -228,8 +270,24 @@ func (m *S3Manager) UploadToS3(ctx context.Context, userID string, key string, d
 
 	_, err := client.PutObject(ctx, input)
 	if err != nil {
+		log.Error().
+			Str("userID", userID).
+			Str("key", key).
+			Str("bucket", config.Bucket).
+			Str("mimeType", mimeType).
+			Int("size", len(data)).
+			Err(err).
+			Msg("Failed to upload file to S3")
 		return fmt.Errorf("failed to upload to S3: %w", err)
 	}
+
+	log.Info().
+		Str("userID", userID).
+		Str("key", key).
+		Str("bucket", config.Bucket).
+		Str("mimeType", mimeType).
+		Int("size", len(data)).
+		Msg("File successfully uploaded to S3")
 
 	return nil
 }
@@ -246,26 +304,37 @@ func (m *S3Manager) GetPublicURL(userID, key string) string {
 		return fmt.Sprintf("%s/%s/%s", strings.TrimRight(config.PublicURL, "/"), config.Bucket, key)
 	}
 
+	// Get resolved endpoint and region (may come from environment variables)
+	endpoint := config.Endpoint
+	if globalEndpoint := os.Getenv(S3_GLOBAL_ENDPOINT); globalEndpoint != "" {
+		endpoint = globalEndpoint
+	}
+
+	region := config.Region
+	if globalRegion := os.Getenv(S3_GLOBAL_REGION); globalRegion != "" {
+		region = globalRegion
+	}
+
 	// Generate standard S3 URL
 	if config.PathStyle {
 		return fmt.Sprintf("%s/%s/%s",
-			strings.TrimRight(config.Endpoint, "/"),
+			strings.TrimRight(endpoint, "/"),
 			config.Bucket,
 			key)
 	}
 
 	// Virtual hosted-style URL
-	if strings.Contains(config.Endpoint, "amazonaws.com") {
+	if strings.Contains(endpoint, "amazonaws.com") {
 		return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s",
 			config.Bucket,
-			config.Region,
+			region,
 			key)
 	}
 
 	// For other S3-compatible services
-	endpoint := strings.TrimPrefix(config.Endpoint, "https://")
-	endpoint = strings.TrimPrefix(endpoint, "http://")
-	return fmt.Sprintf("https://%s.%s/%s", config.Bucket, endpoint, key)
+	endpointClean := strings.TrimPrefix(endpoint, "https://")
+	endpointClean = strings.TrimPrefix(endpointClean, "http://")
+	return fmt.Sprintf("https://%s.%s/%s", config.Bucket, endpointClean, key)
 }
 
 // TestConnection tests S3 connection
