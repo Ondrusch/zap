@@ -30,6 +30,9 @@ var supportedEventTypes = []string{
 	"PairSuccess",
 	"PairError",
 	"QR",
+	"QRCode",
+	"QRTimeout", 
+	"QRSuccess",
 	"QRScannedWithoutMultidevice",
 
 	// Privacy and Settings
@@ -88,3 +91,12 @@ func init() {
 func isValidEventType(eventType string) bool {
 	return eventTypeMap[eventType]
 }
+
+// S3 Environment Variables Constants
+const (
+	// Global S3 credentials (read from environment)
+	S3_GLOBAL_ACCESS_KEY = "S3_ACCESS_KEY"
+	S3_GLOBAL_SECRET_KEY = "S3_SECRET_KEY"
+	S3_GLOBAL_ENDPOINT   = "S3_ENDPOINT"
+	S3_GLOBAL_REGION     = "S3_REGION"
+)
