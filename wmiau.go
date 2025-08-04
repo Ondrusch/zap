@@ -184,7 +184,8 @@ func sendEventWithWebHook(mycli *MyClient, postmap map[string]interface{}, path 
 	// Get global webhook if configured
 	go sendToGlobalWebHook(jsonData, mycli.token, mycli.userID)
 
-	go sendToGlobalRabbit(jsonData)
+	// Prepare enhanced payload for RabbitMQ with instance information
+	go sendToGlobalRabbitWithInstanceInfo(jsonData, eventType, mycli.userID, mycli.token)
 }
 
 func checkIfSubscribedToEvent(subscribedEvents []string, eventType string, userId string) bool {
