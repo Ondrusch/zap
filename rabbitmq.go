@@ -220,3 +220,75 @@ func sendToGlobalRabbitWithInstanceInfo(originalJsonData []byte, eventType strin
 			Msg("Published enhanced message to RabbitMQ")
 	}
 }
+
+// Synchronous version for delivery manager
+func sendToGlobalRabbitWithInstanceInfoSync(originalJsonData []byte, eventType string, userID string, token string, queueOverride ...string) error {
+	if !rabbitEnabled {
+		log.Debug().Msg("RabbitMQ publishing is disabled, not sending message")
+		return nil
+	}
+
+	// Get instance name and ownerId from cache if available
+	instanceName := ""
+	ownerId := ""
+	userinfo, found := userinfocache.Get(token)
+	if found {
+		instanceName = userinfo.(Values).Get("Name")
+		ownerId = userinfo.(Values).Get("Jid")
+	}
+
+	// Parse original JSON data
+	var originalEvent map[string]interface{}
+	err := json.Unmarshal(originalJsonData, &originalEvent)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to unmarshal original JSON data for RabbitMQ")
+		return err
+	}
+
+	// Create enhanced payload with instance information
+	enhancedPayload := map[string]interface{}{
+		"event":        originalEvent,
+		"instanceId":   userID,
+		"instanceName": instanceName,
+		"token":        token,
+		"ownerId":      ownerId,
+	}
+
+	// Marshal enhanced payload
+	enhancedJsonData, err := json.Marshal(enhancedPayload)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to marshal enhanced payload for RabbitMQ")
+		return err
+	}
+
+	var queueName string
+	if len(queueOverride) > 0 && queueOverride[0] != "" {
+		// Use provided queue override
+		queueName = queueOverride[0]
+	} else {
+		// Determine queue name based on event type
+		queueName = getQueueName(eventType)
+	}
+
+	err = PublishToRabbit(enhancedJsonData, queueName)
+	if err != nil {
+		log.Error().Err(err).
+			Str("eventType", eventType).
+			Str("queue", queueName).
+			Str("instanceId", userID).
+			Str("instanceName", instanceName).
+			Str("ownerId", ownerId).
+			Msg("Failed to publish to RabbitMQ")
+		return err
+	}
+
+	log.Debug().
+		Str("eventType", eventType).
+		Str("queue", queueName).
+		Str("instanceId", userID).
+		Str("instanceName", instanceName).
+		Str("ownerId", ownerId).
+		Msg("Published enhanced message to RabbitMQ")
+
+	return nil
+}
