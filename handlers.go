@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -1226,7 +1227,7 @@ func (s *server) SendSticker() http.HandlerFunc {
 // Sends Video message
 func (s *server) SendVideo() http.HandlerFunc {
 
-	type imageStruct struct {
+	type videoStruct struct {
 		Phone         string
 		Video         string
 		Caption       string
@@ -1248,7 +1249,7 @@ func (s *server) SendVideo() http.HandlerFunc {
 		}
 
 		decoder := json.NewDecoder(r.Body)
-		var t imageStruct
+		var t videoStruct
 		err := decoder.Decode(&t)
 		if err != nil {
 			s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode Payload"))
@@ -1280,36 +1281,137 @@ func (s *server) SendVideo() http.HandlerFunc {
 
 		var uploaded whatsmeow.UploadResponse
 		var filedata []byte
+		var mimeTypeFromSource string
 
-		if t.Video[0:4] == "data" {
+		// Check if Video field contains a URL or base64 data
+		if strings.HasPrefix(t.Video, "http://") || strings.HasPrefix(t.Video, "https://") {
+			// Handle URL download
+			log.Info().Str("url", t.Video).Msg("Downloading video from URL")
+
+			// Create HTTP client with timeout
+			client := &http.Client{
+				Timeout: 60 * time.Second, // 60 second timeout for video downloads
+			}
+
+			resp, err := client.Get(t.Video)
+			if err != nil {
+				log.Error().Str("error", fmt.Sprintf("%v", err)).Str("url", t.Video).Msg("Failed to download video from URL")
+				s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to download video from URL: %v", err)))
+				return
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				log.Error().Int("statusCode", resp.StatusCode).Str("url", t.Video).Msg("HTTP error downloading video")
+				s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to download video: HTTP %d", resp.StatusCode)))
+				return
+			}
+
+			// Check content length (optional limit)
+			const maxVideoSize = 100 * 1024 * 1024 // 100MB limit
+			if resp.ContentLength > maxVideoSize {
+				log.Error().Int64("contentLength", resp.ContentLength).Msg("Video file too large")
+				s.Respond(w, r, http.StatusBadRequest, errors.New("video file too large (max 100MB)"))
+				return
+			}
+
+			// Read the response body
+			filedata, err = io.ReadAll(resp.Body)
+			if err != nil {
+				log.Error().Str("error", fmt.Sprintf("%v", err)).Str("url", t.Video).Msg("Failed to read video data from URL")
+				s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to read video data: %v", err)))
+				return
+			}
+
+			// Get MIME type from Content-Type header
+			mimeTypeFromSource = resp.Header.Get("Content-Type")
+			log.Info().Int("fileSize", len(filedata)).Str("contentType", mimeTypeFromSource).Str("url", t.Video).Msg("Video downloaded successfully from URL")
+
+		} else if len(t.Video) > 10 && (t.Video[0:11] == "data:video/" || t.Video[0:10] == "data:video") {
+			// Handle base64 data
 			var dataURL, err = dataurl.DecodeString(t.Video)
 			if err != nil {
+				log.Error().Str("error", fmt.Sprintf("%v", err)).Msg("Failed to decode base64 video data")
 				s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
 				return
-			} else {
-				filedata = dataURL.Data
-				uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaVideo)
-				if err != nil {
-					s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
-					return
-				}
 			}
+
+			filedata = dataURL.Data
+			mimeTypeFromSource = dataURL.ContentType()
+			log.Info().Int("fileSize", len(filedata)).Str("mimeType", mimeTypeFromSource).Msg("Video data decoded successfully from base64")
+
 		} else {
-			s.Respond(w, r, http.StatusBadRequest, errors.New("data should start with \"data:mime/type;base64,\""))
+			s.Respond(w, r, http.StatusBadRequest, errors.New("video field should contain either a URL (http://... or https://...) or base64 data (data:video/...)"))
 			return
 		}
 
-		msg := &waE2E.Message{VideoMessage: &waE2E.VideoMessage{
-			Caption:    proto.String(t.Caption),
-			URL:        proto.String(uploaded.URL),
-			DirectPath: proto.String(uploaded.DirectPath),
-			MediaKey:   uploaded.MediaKey,
-			Mimetype: proto.String(func() string {
-				if t.MimeType != "" {
-					return t.MimeType
+		// Validate MP4 format by checking file signature (magic bytes)
+		if len(filedata) >= 12 {
+			// MP4 files typically have 'ftyp' at offset 4-7
+			ftypFound := false
+			for i := 0; i <= 8; i += 4 {
+				if i+7 < len(filedata) {
+					if string(filedata[i:i+4]) == "ftyp" {
+						ftypFound = true
+						log.Info().Int("offset", i).Msg("Found MP4 ftyp signature")
+						break
+					}
 				}
-				return http.DetectContentType(filedata)
-			}()),
+			}
+
+			if !ftypFound {
+				log.Warn().Msg("MP4 signature not found in video data")
+				s.Respond(w, r, http.StatusBadRequest, errors.New("invalid video format. Please ensure the file is a valid MP4 video"))
+				return
+			}
+		} else {
+			log.Warn().Int("fileSize", len(filedata)).Msg("Video file too small to be valid")
+			s.Respond(w, r, http.StatusBadRequest, errors.New("video file appears to be corrupted or too small"))
+			return
+		}
+
+		// Upload to WhatsApp servers
+		uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaVideo)
+		if err != nil {
+			log.Error().Str("error", fmt.Sprintf("%v", err)).Msg("Failed to upload video to WhatsApp servers")
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
+			return
+		}
+		log.Info().Str("url", uploaded.URL).Str("directPath", uploaded.DirectPath).Msg("Video uploaded successfully")
+
+		// Determine MIME type with better detection
+		mimeType := func() string {
+			// Priority 1: Use explicitly provided MIME type if valid
+			if t.MimeType != "" && strings.HasPrefix(t.MimeType, "video/") {
+				log.Info().Str("mimeType", t.MimeType).Msg("Using provided MIME type")
+				return t.MimeType
+			}
+
+			// Priority 2: Use MIME type from source (URL Content-Type or base64 data URL)
+			if mimeTypeFromSource != "" && strings.HasPrefix(mimeTypeFromSource, "video/") {
+				log.Info().Str("mimeType", mimeTypeFromSource).Msg("Using MIME type from source")
+				return mimeTypeFromSource
+			}
+
+			// Priority 3: Fall back to auto-detection
+			detected := http.DetectContentType(filedata)
+			log.Info().Str("mimeType", detected).Msg("Using auto-detected MIME type")
+
+			// Priority 4: If detection fails or returns generic type, default to MP4
+			if detected == "application/octet-stream" || !strings.HasPrefix(detected, "video/") {
+				log.Warn().Str("detected", detected).Msg("Auto-detection failed, defaulting to video/mp4")
+				return "video/mp4"
+			}
+
+			return detected
+		}()
+
+		msg := &waE2E.Message{VideoMessage: &waE2E.VideoMessage{
+			Caption:       proto.String(t.Caption),
+			URL:           proto.String(uploaded.URL),
+			DirectPath:    proto.String(uploaded.DirectPath),
+			MediaKey:      uploaded.MediaKey,
+			Mimetype:      proto.String(mimeType),
 			FileEncSHA256: uploaded.FileEncSHA256,
 			FileSHA256:    uploaded.FileSHA256,
 			FileLength:    proto.Uint64(uint64(len(filedata))),
@@ -1330,14 +1432,23 @@ func (s *server) SendVideo() http.HandlerFunc {
 			msg.ExtendedTextMessage.ContextInfo.MentionedJID = t.ContextInfo.MentionedJID
 		}
 
+		log.Info().Str("recipient", recipient.String()).Str("msgid", msgid).Str("mimeType", mimeType).Msg("Sending video message to WhatsApp")
+
 		resp, err = clientManager.GetWhatsmeowClient(txtid).SendMessage(context.Background(), recipient, msg, whatsmeow.SendRequestExtra{ID: msgid})
 		if err != nil {
+			log.Error().Str("error", fmt.Sprintf("%v", err)).Str("recipient", recipient.String()).Str("msgid", msgid).Msg("Failed to send video message")
 			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("error sending message: %v", err)))
 			return
 		}
 
-		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Msg("Message sent")
-		response := map[string]interface{}{"Details": "Sent", "Timestamp": resp.Timestamp.Unix(), "Id": msgid}
+		log.Info().Str("timestamp", fmt.Sprintf("%v", resp.Timestamp)).Str("id", msgid).Str("recipient", recipient.String()).Int("fileSize", len(filedata)).Str("mimeType", mimeType).Msg("Video message sent successfully")
+		response := map[string]interface{}{
+			"Details":   "Sent",
+			"Timestamp": resp.Timestamp.Unix(),
+			"Id":        msgid,
+			"FileSize":  len(filedata),
+			"MimeType":  mimeType,
+		}
 		responseJson, err := json.Marshal(response)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, err)

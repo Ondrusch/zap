@@ -604,15 +604,24 @@ curl -X POST -H 'Token: 1234ABCD' -H 'Content-Type: application/json' --data '{"
 
 ## Send Video Message
 
-Sends a Video message. Video must be in mp4 or 3gpp and base64 encoded in embedded format. You can optionally specify a text Caption and a JpegThumbnail
+Sends a Video message. Video can be provided in two formats:
+1. **Base64 encoded**: Video must be in mp4 or 3gpp format and base64 encoded in embedded format (`data:video/mp4;base64,...`)
+2. **URL**: Direct HTTP/HTTPS URL to a video file (max 100MB)
+
+You can optionally specify a text Caption and a JpegThumbnail
 
 Endpoint: _/chat/send/video_
 
 Method: **POST**
 
-
+**Example with base64:**
 ```
-curl -X POST -H 'Token: 1234ABCD' -H 'Content-Type: application/json' --data '{"Phone":"5491155554444","Caption":"Look at this", "Video":"data:image/jpeg;base64,iVBORw0KGgoAAAANSU..."}' http://localhost:8080/chat/send/video
+curl -X POST -H 'Token: 1234ABCD' -H 'Content-Type: application/json' --data '{"Phone":"5491155554444","Caption":"Look at this", "Video":"data:video/mp4;base64,AAAAHGZ0eXBpc29t..."}' http://localhost:8080/chat/send/video
+```
+
+**Example with URL:**
+```
+curl -X POST -H 'Token: 1234ABCD' -H 'Content-Type: application/json' --data '{"Phone":"5491155554444","Caption":"Check this video", "Video":"https://example.com/video.mp4"}' http://localhost:8080/chat/send/video
 ```
 
 
