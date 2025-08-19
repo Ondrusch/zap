@@ -103,6 +103,44 @@ func callHookFile(myurl string, payload map[string]string, id string, file strin
 	return nil
 }
 
+// Context-aware version for delivery manager
+func callHookFileWithContext(ctx context.Context, myurl string, payload map[string]string, id string, file string) error {
+	log.Info().Str("file", file).Str("url", myurl).Msg("Sending POST with context")
+
+	client := clientManager.GetHTTPClient(id)
+	if client == nil {
+		return fmt.Errorf("HTTP client not found for user %s", id)
+	}
+
+	// Create final payload map
+	finalPayload := make(map[string]string)
+	for k, v := range payload {
+		finalPayload[k] = v
+	}
+
+	finalPayload["file"] = file
+
+	log.Debug().Interface("finalPayload", finalPayload).Msg("Final payload to be sent")
+
+	resp, err := client.R().
+		SetContext(ctx).
+		SetFiles(map[string]string{
+			"file": file,
+		}).
+		SetFormData(finalPayload).
+		Post(myurl)
+
+	if err != nil {
+		log.Error().Err(err).Str("url", myurl).Msg("Failed to send POST request with context")
+		return fmt.Errorf("failed to send POST request: %w", err)
+	}
+
+	log.Debug().Interface("payload", finalPayload).Msg("Payload sent to webhook")
+	log.Info().Int("status", resp.StatusCode()).Str("body", string(resp.Body())).Msg("POST request completed")
+
+	return nil
+}
+
 func (s *server) respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(payload); err != nil {

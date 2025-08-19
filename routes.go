@@ -138,5 +138,14 @@ func (s *server) routes() {
 
 	s.router.Handle("/newsletter/list", c.Then(s.ListNewsletter())).Methods("GET")
 
+	// Delivery monitoring endpoints (admin only)
+	admin := s.router.PathPrefix("/admin").Subrouter()
+	admin.Use(s.authadmin)
+	admin.Handle("/delivery/status", s.DeliveryStatus()).Methods("GET")
+	admin.Handle("/delivery/metrics", s.DeliveryMetrics()).Methods("GET")
+	admin.Handle("/delivery/event/{eventId}", s.EventStatus()).Methods("GET")
+	admin.Handle("/delivery/retry", s.ForceRetry()).Methods("POST")
+	admin.Handle("/delivery/retry/{eventId}", s.ForceRetry()).Methods("POST")
+
 	s.router.PathPrefix("/").Handler(http.FileServer(http.Dir(exPath + "/static/")))
 }

@@ -149,6 +149,9 @@ func init() {
 	}
 
 	InitRabbitMQ()
+
+	// Initialize Delivery Manager for reliable event delivery
+	InitDeliveryManager()
 }
 
 func main() {

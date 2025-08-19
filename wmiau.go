@@ -144,8 +144,6 @@ func getUserWebhookUrl(token string) string {
 }
 
 func sendEventWithWebHook(mycli *MyClient, postmap map[string]interface{}, path string) {
-	webhookurl := getUserWebhookUrl(mycli.token)
-
 	// Get updated events from cache/database
 	subscribedEvents, err := updateAndGetUserSubscriptions(mycli)
 	if err != nil {
@@ -177,6 +175,30 @@ func sendEventWithWebHook(mycli *MyClient, postmap map[string]interface{}, path 
 		log.Error().Err(err).Msg("Failed to marshal postmap to JSON")
 		return
 	}
+
+	// Create delivery event for reliable delivery
+	event := &DeliveryEvent{
+		UserID:    mycli.userID,
+		Token:     mycli.token,
+		EventType: eventType,
+		Payload:   postmap,
+		JsonData:  jsonData,
+		FilePath:  path,
+	}
+
+	// Use delivery manager for guaranteed delivery to all channels
+	if deliveryManager != nil {
+		deliveryManager.DeliverEvent(event)
+	} else {
+		// Fallback to old method if delivery manager is not initialized
+		log.Warn().Msg("Delivery manager not initialized, using fallback method")
+		sendEventWithWebHookFallback(mycli, postmap, path, jsonData, eventType)
+	}
+}
+
+// Fallback method for when delivery manager is not available
+func sendEventWithWebHookFallback(mycli *MyClient, postmap map[string]interface{}, path string, jsonData []byte, eventType string) {
+	webhookurl := getUserWebhookUrl(mycli.token)
 
 	// Call user webhook if configured
 	sendToUserWebHook(webhookurl, path, jsonData, mycli.userID, mycli.token)
@@ -475,14 +497,14 @@ func (s *server) startClient(userID string, textjid string, token string, subscr
 							userinfocache.Set(token, v, cache.NoExpiration)
 						}
 					}
-					
+
 					// Send QRTimeout event to webhook/RabbitMQ
 					postmap := make(map[string]interface{})
 					postmap["type"] = "QRTimeout"
 					postmap["event"] = evt.Event
-					
+
 					sendEventWithWebHook(&mycli, postmap, "")
-					
+
 					log.Warn().Msg("QR timeout killing channel")
 					clientManager.DeleteWhatsmeowClient(userID)
 					clientManager.DeleteMyClient(userID)
@@ -501,12 +523,12 @@ func (s *server) startClient(userID string, textjid string, token string, subscr
 							userinfocache.Set(token, v, cache.NoExpiration)
 						}
 					}
-					
+
 					// Send QRSuccess event to webhook/RabbitMQ
 					postmap := make(map[string]interface{})
 					postmap["type"] = "QRSuccess"
 					postmap["event"] = evt.Event
-					
+
 					sendEventWithWebHook(&mycli, postmap, "")
 				} else {
 					log.Info().Str("event", evt.Event).Msg("Login event")
@@ -611,7 +633,7 @@ func (mycli *MyClient) myEventHandler(rawEvt interface{}) {
 			userinfocache.Set(token, v, cache.NoExpiration)
 			log.Info().Str("jid", jid.String()).Str("userid", txtid).Str("token", token).Msg("User information set")
 		}
-		
+
 		// Send PairSuccess event to webhook/RabbitMQ
 		postmap["type"] = "PairSuccess"
 		postmap["id"] = evt.ID.String()
