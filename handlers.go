@@ -4819,15 +4819,15 @@ func (s *server) TestS3Connection() http.HandlerFunc {
 
 		err := s.db.Get(&config, `
 			SELECT 
-				s3_enabled as enabled,
-				s3_endpoint as endpoint,
-				s3_region as region,
-				s3_bucket as bucket,
-				s3_access_key as accesskey,
-				s3_secret_key as secretkey,
-				s3_path_style as pathstyle,
-				s3_public_url as publicurl,
-				s3_retention_days as retentiondays
+				s3_enabled as Enabled,
+				s3_endpoint as Endpoint,
+				s3_region as Region,
+				s3_bucket as Bucket,
+				s3_access_key as AccessKey,
+				s3_secret_key as SecretKey,
+				s3_path_style as PathStyle,
+				s3_public_url as PublicURL,
+				s3_retention_days as RetentionDays
 			FROM users WHERE id = $1`, txtid)
 
 		if err != nil {
