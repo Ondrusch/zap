@@ -18,6 +18,7 @@ type DatabaseConfig struct {
 	Password string
 	Name     string
 	Path     string
+	SSLMode  string
 }
 
 func InitializeDatabase(exPath string) (*sqlx.DB, error) {
@@ -30,14 +31,20 @@ func InitializeDatabase(exPath string) (*sqlx.DB, error) {
 }
 
 func getDatabaseConfig(exPath string) DatabaseConfig {
-	// Check for PostgreSQL configuration
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
+	dbSSL := os.Getenv("DB_SSLMODE")
 
-	// If all PostgreSQL configs are present, use PostgreSQL
+    sslMode := dbSSL
+	if dbSSL == "true" {
+		sslMode = "require"
+	} else if dbSSL == "false" || dbSSL == "" {
+		sslMode = "disable"
+	}
+
 	if dbUser != "" && dbPassword != "" && dbName != "" && dbHost != "" && dbPort != "" {
 		return DatabaseConfig{
 			Type:     "postgres",
@@ -46,10 +53,10 @@ func getDatabaseConfig(exPath string) DatabaseConfig {
 			User:     dbUser,
 			Password: dbPassword,
 			Name:     dbName,
+			SSLMode:  sslMode,
 		}
 	}
 
-	// Default to SQLite
 	return DatabaseConfig{
 		Type: "sqlite",
 		Path: filepath.Join(exPath, "dbdata"),
@@ -58,8 +65,8 @@ func getDatabaseConfig(exPath string) DatabaseConfig {
 
 func initializePostgres(config DatabaseConfig) (*sqlx.DB, error) {
 	dsn := fmt.Sprintf(
-		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
-		config.User, config.Password, config.Name, config.Host, config.Port,
+		"user=%s password=%s dbname=%s host=%s port=%s sslmode=%s",
+		config.User, config.Password, config.Name, config.Host, config.Port, config.SSLMode,
 	)
 
 	db, err := sqlx.Open("postgres", dsn)
@@ -75,7 +82,6 @@ func initializePostgres(config DatabaseConfig) (*sqlx.DB, error) {
 }
 
 func initializeSQLite(config DatabaseConfig) (*sqlx.DB, error) {
-	// Ensure dbdata directory exists
 	if err := os.MkdirAll(config.Path, 0751); err != nil {
 		return nil, fmt.Errorf("could not create dbdata directory: %w", err)
 	}
