@@ -163,6 +163,13 @@ func ProcessOutgoingMedia(userID string, contactJID string, messageID string, da
 		s3Config.MediaDelivery = "base64"
 	}
 
+	// If global S3 credentials are configured, force S3 usage
+	if isGlobalS3Configured() {
+		s3Config.Enabled = true
+		s3Config.MediaDelivery = "s3"
+		log.Info().Str("userID", userID).Msg("Global S3 credentials detected, forcing S3-only media delivery for outgoing media")
+	}
+
 	// Process S3 upload if enabled
 	if s3Config.Enabled && (s3Config.MediaDelivery == "s3" || s3Config.MediaDelivery == "both") {
 		// Process S3 upload (outgoing messages are always in outbox)

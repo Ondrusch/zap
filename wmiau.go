@@ -29,6 +29,16 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
+// isGlobalS3Configured checks if all required global S3 environment variables are set
+func isGlobalS3Configured() bool {
+	globalS3AccessKey := os.Getenv(S3_GLOBAL_ACCESS_KEY)
+	globalS3SecretKey := os.Getenv(S3_GLOBAL_SECRET_KEY)
+	globalS3Endpoint := os.Getenv(S3_GLOBAL_ENDPOINT)
+	globalS3Region := os.Getenv(S3_GLOBAL_REGION)
+	
+	return globalS3AccessKey != "" && globalS3SecretKey != "" && globalS3Endpoint != "" && globalS3Region != ""
+}
+
 // db field declaration as *sqlx.DB
 type MyClient struct {
 	WAClient       *whatsmeow.Client
@@ -304,6 +314,33 @@ func (s *server) connectOnStartup() {
 				if err != nil {
 					log.Error().Err(err).Str("userID", userID).Msg("Failed to get S3 config")
 					return
+				}
+
+				// If global S3 credentials are configured, force S3 initialization
+				if isGlobalS3Configured() {
+					s3Config.Enabled = true
+					// Use global values if user doesn't have them configured
+					if s3Config.Endpoint == "" {
+						s3Config.Endpoint = os.Getenv(S3_GLOBAL_ENDPOINT)
+					}
+					if s3Config.Region == "" {
+						s3Config.Region = os.Getenv(S3_GLOBAL_REGION)
+					}
+					// Use global bucket or default bucket name if not configured
+					if s3Config.Bucket == "" {
+						if globalBucket := os.Getenv(S3_GLOBAL_BUCKET); globalBucket != "" {
+							s3Config.Bucket = globalBucket
+						} else {
+							s3Config.Bucket = "wuzapi-media"
+						}
+					}
+					// Only force path-style URLs if bucket name contains dots (to avoid SSL certificate issues)
+					s3Config.PathStyle = strings.Contains(s3Config.Bucket, ".")
+					log.Info().
+						Str("userID", userID).
+						Str("bucket", s3Config.Bucket).
+						Bool("pathStyle", s3Config.PathStyle).
+						Msg("Global S3 credentials detected, forcing S3 initialization")
 				}
 
 				if s3Config.Enabled {
@@ -662,6 +699,13 @@ func (mycli *MyClient) myEventHandler(rawEvt interface{}) {
 		} else {
 			s3Config.Enabled = myuserinfo.(Values).Get("S3Enabled")
 			s3Config.MediaDelivery = myuserinfo.(Values).Get("MediaDelivery")
+		}
+
+		// If global S3 credentials are configured, force S3 usage
+		if isGlobalS3Configured() {
+			s3Config.Enabled = "true"
+			s3Config.MediaDelivery = "s3"
+			log.Info().Str("userID", txtid).Msg("Global S3 credentials detected, forcing S3-only media delivery")
 		}
 
 		postmap["type"] = "Message"

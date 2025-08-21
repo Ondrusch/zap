@@ -85,7 +85,7 @@ func (m *S3Manager) InitializeS3Client(userID string, config *S3Config) error {
 		"",
 	)
 
-	// Use global environment variables for region/endpoint if available
+	// Use global environment variables for region/endpoint/bucket if available
 	region := config.Region
 	if globalRegion := os.Getenv(S3_GLOBAL_REGION); globalRegion != "" {
 		region = globalRegion
@@ -94,6 +94,23 @@ func (m *S3Manager) InitializeS3Client(userID string, config *S3Config) error {
 	endpoint := config.Endpoint
 	if globalEndpoint := os.Getenv(S3_GLOBAL_ENDPOINT); globalEndpoint != "" {
 		endpoint = globalEndpoint
+	}
+
+	// Clean endpoint if it contains bucket name (common misconfiguration)
+	if endpoint != "" && strings.Contains(endpoint, config.Bucket+".") {
+		// Remove bucket name from endpoint
+		endpoint = strings.Replace(endpoint, config.Bucket+".", "", 1)
+		log.Warn().
+			Str("userID", userID).
+			Str("originalEndpoint", os.Getenv(S3_GLOBAL_ENDPOINT)).
+			Str("cleanedEndpoint", endpoint).
+			Str("bucket", config.Bucket).
+			Msg("Cleaned bucket name from S3 endpoint - endpoint should not contain bucket name")
+	}
+
+	// Update bucket from global environment if available
+	if globalBucket := os.Getenv(S3_GLOBAL_BUCKET); globalBucket != "" && config.Bucket == "" {
+		config.Bucket = globalBucket // Update the config to use global bucket
 	}
 
 	// Configure S3 client
@@ -115,9 +132,19 @@ func (m *S3Manager) InitializeS3Client(userID string, config *S3Config) error {
 		cfg.EndpointResolverWithOptions = customResolver
 	}
 
+	// Force path-style for buckets with dots in their names to avoid SSL certificate issues
+	usePathStyle := config.PathStyle
+	if strings.Contains(config.Bucket, ".") {
+		usePathStyle = true
+		log.Info().
+			Str("userID", userID).
+			Str("bucket", config.Bucket).
+			Msg("Bucket name contains dots, forcing path-style URLs to avoid SSL certificate issues")
+	}
+
 	// Create S3 client
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.UsePathStyle = config.PathStyle
+		o.UsePathStyle = usePathStyle
 	})
 
 	m.clients[userID] = client
@@ -129,6 +156,7 @@ func (m *S3Manager) InitializeS3Client(userID string, config *S3Config) error {
 		Str("region", region).
 		Str("endpoint", endpoint).
 		Bool("using_global_credentials", globalAccessKey != "").
+		Bool("using_global_bucket", os.Getenv(S3_GLOBAL_BUCKET) != "").
 		Msg("S3 client initialized")
 	return nil
 }
@@ -167,9 +195,9 @@ func (m *S3Manager) GenerateS3Key(userID, contactJID, messageID string, mimeType
 
 	// Get current time
 	now := time.Now()
-	year := now.Format("2025")
-	month := now.Format("05")
-	day := now.Format("25")
+	year := now.Format("2006")
+	month := now.Format("01")
+	day := now.Format("02")
 
 	// Determine media type folder
 	mediaType := "documents"
@@ -301,7 +329,15 @@ func (m *S3Manager) GetPublicURL(userID, key string) string {
 
 	// Use custom public URL if configured
 	if config.PublicURL != "" {
-		return fmt.Sprintf("%s/%s/%s", strings.TrimRight(config.PublicURL, "/"), config.Bucket, key)
+		url := fmt.Sprintf("%s/%s/%s", strings.TrimRight(config.PublicURL, "/"), config.Bucket, key)
+		log.Debug().
+			Str("userID", userID).
+			Str("bucket", config.Bucket).
+			Str("key", key).
+			Str("publicURL", config.PublicURL).
+			Str("generatedURL", url).
+			Msg("Generated URL using custom public URL")
+		return url
 	}
 
 	// Get resolved endpoint and region (may come from environment variables)
@@ -315,26 +351,77 @@ func (m *S3Manager) GetPublicURL(userID, key string) string {
 		region = globalRegion
 	}
 
-	// Generate standard S3 URL
-	if config.PathStyle {
-		return fmt.Sprintf("%s/%s/%s",
-			strings.TrimRight(endpoint, "/"),
-			config.Bucket,
-			key)
+	// Force path-style for buckets with dots in their names to avoid SSL certificate issues
+	usePathStyle := config.PathStyle
+	if strings.Contains(config.Bucket, ".") {
+		usePathStyle = true
 	}
 
-	// Virtual hosted-style URL
+	log.Debug().
+		Str("userID", userID).
+		Str("bucket", config.Bucket).
+		Str("endpoint", endpoint).
+		Str("region", region).
+		Bool("usePathStyle", usePathStyle).
+		Msg("S3 URL generation parameters")
+
+	var generatedURL string
+
+	// Generate AWS S3 URL
 	if strings.Contains(endpoint, "amazonaws.com") {
-		return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s",
-			config.Bucket,
-			region,
-			key)
+		if usePathStyle {
+			// Path-style URL for AWS S3
+			generatedURL = fmt.Sprintf("https://s3.%s.amazonaws.com/%s/%s",
+				region,
+				config.Bucket,
+				key)
+		} else {
+			// Virtual hosted-style URL for AWS S3
+			generatedURL = fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s",
+				config.Bucket,
+				region,
+				key)
+		}
+	} else if endpoint != "" {
+		// For other S3-compatible services
+		if usePathStyle {
+			generatedURL = fmt.Sprintf("%s/%s/%s",
+				strings.TrimRight(endpoint, "/"),
+				config.Bucket,
+				key)
+		} else {
+			endpointClean := strings.TrimPrefix(endpoint, "https://")
+			endpointClean = strings.TrimPrefix(endpointClean, "http://")
+			generatedURL = fmt.Sprintf("https://%s.%s/%s", config.Bucket, endpointClean, key)
+		}
+	} else {
+		// Default AWS S3 URL when no endpoint is specified
+		if usePathStyle {
+			// Path-style URL for AWS S3
+			generatedURL = fmt.Sprintf("https://s3.%s.amazonaws.com/%s/%s",
+				region,
+				config.Bucket,
+				key)
+		} else {
+			// Virtual hosted-style URL for AWS S3
+			generatedURL = fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s",
+				config.Bucket,
+				region,
+				key)
+		}
 	}
 
-	// For other S3-compatible services
-	endpointClean := strings.TrimPrefix(endpoint, "https://")
-	endpointClean = strings.TrimPrefix(endpointClean, "http://")
-	return fmt.Sprintf("https://%s.%s/%s", config.Bucket, endpointClean, key)
+	log.Info().
+		Str("userID", userID).
+		Str("bucket", config.Bucket).
+		Str("key", key).
+		Str("endpoint", endpoint).
+		Str("region", region).
+		Bool("usePathStyle", usePathStyle).
+		Str("generatedURL", generatedURL).
+		Msg("Generated S3 public URL")
+
+	return generatedURL
 }
 
 // TestConnection tests S3 connection
