@@ -959,7 +959,7 @@ func (s *server) SendAudio() http.HandlerFunc {
             }
             filedata = parsed.Data
         } else {
-            s.Respond(w, r, http.StatusBadRequest, errors.New("audio data should start with \"data:audio/ogg;base64,\""))
+            s.Respond(w, r, http.StatusBadRequest, errors.New("audio data should be a data URL starting with \"data:audio/ogg;base64,\" or a valid HTTP/HTTPS URL"))
             return
         }
 
