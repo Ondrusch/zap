@@ -1272,7 +1272,7 @@ func (s *server) SendSticker() http.HandlerFunc {
             }
             filedata = parsed.Data
         } else {
-            s.Respond(w, r, http.StatusBadRequest, errors.New("Data should start with \"data:mime/type;base64,\""))
+            s.Respond(w, r, http.StatusBadRequest, errors.New("Data should be a data URL starting with \"data:mime/type;base64,\" or a valid HTTP/HTTPS URL"))
             return
         }
 
