@@ -951,13 +951,7 @@ func (s *server) SendAudio() http.HandlerFunc {
                 s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch audio from url: %v", err)))
                 return
             }
-            audioDataURL := dataurl.New(data, "audio/ogg")
-            parsed, err := dataurl.DecodeString(audioDataURL.String())
-            if err != nil {
-                s.Respond(w, r, http.StatusInternalServerError, errors.New("could not re-encode audio to base64"))
-                return
-            }
-            filedata = parsed.Data
+            filedata = data
         } else {
             s.Respond(w, r, http.StatusBadRequest, errors.New("audio data should be a data URL starting with \"data:audio/ogg;base64,\" or a valid HTTP/HTTPS URL"))
             return
