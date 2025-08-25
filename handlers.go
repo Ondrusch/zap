@@ -71,8 +71,8 @@ func fetchURLBytes(resourceURL string) ([]byte, string, error) {
     }
 
     // Limit download size to 100MB to prevent excessive memory usage.
-    limitedBody := &http.MaxBytesReader{R: resp.Body, N: 100 * 1024 * 1024}
-    data, err := io.ReadAll(limitedBody)
+    limited := &io.LimitedReader{R: resp.Body, N: 100 * 1024 * 1024}
+    data, err := io.ReadAll(limited)
     if err != nil {
         return nil, "", err
     }
