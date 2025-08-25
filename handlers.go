@@ -1086,13 +1086,7 @@ func (s *server) SendImage() http.HandlerFunc {
             if !strings.HasPrefix(strings.ToLower(mimeType), "image/") {
                 mimeType = "image/jpeg"
             }
-            imgDataURL := dataurl.New(data, mimeType)
-            parsed, err := dataurl.DecodeString(imgDataURL.String())
-            if err != nil {
-                s.Respond(w, r, http.StatusInternalServerError, errors.New("could not re-encode image to base64"))
-                return
-            }
-            filedata = parsed.Data
+            filedata = data
         } else {
             s.Respond(w, r, http.StatusBadRequest, errors.New("Image data should be a data URL starting with \"data:image/png;base64,\" or a valid HTTP/HTTPS URL"))
             return
