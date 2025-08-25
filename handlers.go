@@ -814,13 +814,7 @@ func (s *server) SendDocument() http.HandlerFunc {
                 s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch document from url: %v", err)))
                 return
             }
-            docDataURL := dataurl.New(data, "application/octet-stream")
-            parsed, err := dataurl.DecodeString(docDataURL.String())
-            if err != nil {
-                s.Respond(w, r, http.StatusInternalServerError, errors.New("could not re-encode document to base64"))
-                return
-            }
-            filedata = parsed.Data
+            filedata = data
         } else {
             s.Respond(w, r, http.StatusBadRequest, errors.New("document data should be a data URL starting with \"data:application/octet-stream;base64,\" or a valid HTTP/HTTPS URL"))
             return
