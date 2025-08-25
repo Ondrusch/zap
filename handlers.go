@@ -1258,13 +1258,7 @@ func (s *server) SendSticker() http.HandlerFunc {
             if mimeType == "" {
                 mimeType = "image/webp"
             }
-            stDataURL := dataurl.New(data, mimeType)
-            parsed, err := dataurl.DecodeString(stDataURL.String())
-            if err != nil {
-                s.Respond(w, r, http.StatusInternalServerError, errors.New("could not re-encode sticker to base64"))
-                return
-            }
-            filedata = parsed.Data
+            filedata = data
         } else {
             s.Respond(w, r, http.StatusBadRequest, errors.New("Data should be a data URL starting with \"data:mime/type;base64,\" or a valid HTTP/HTTPS URL"))
             return
