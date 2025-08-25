@@ -1414,7 +1414,7 @@ func (s *server) SendVideo() http.HandlerFunc {
             }
             filedata = parsed.Data
         } else {
-            s.Respond(w, r, http.StatusBadRequest, errors.New("data should start with \"data:mime/type;base64,\""))
+            s.Respond(w, r, http.StatusBadRequest, errors.New("data should be a data URL starting with \"data:mime/type;base64,\" or a valid HTTP/HTTPS URL"))
             return
         }
 
