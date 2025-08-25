@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
-	"io"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
 	"image/jpeg"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -42,47 +42,47 @@ func (v Values) Get(key string) string {
 
 // isHTTPURL checks if the input is an http(s) URL
 func isHTTPURL(input string) bool {
-    parsed, err := url.ParseRequestURI(input)
-    if err != nil {
-        return false
-    }
-    if parsed.Scheme != "http" && parsed.Scheme != "https" {
-        return false
-    }
-    return parsed.Host != ""
+	parsed, err := url.ParseRequestURI(input)
+	if err != nil {
+		return false
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return false
+	}
+	return parsed.Host != ""
 }
 
 // fetchURLBytes downloads the content from a URL and returns its bytes and Content-Type
 func fetchURLBytes(resourceURL string) ([]byte, string, error) {
-    httpClient := &http.Client{Timeout: 60 * time.Second}
-    req, err := http.NewRequest("GET", resourceURL, nil)
-    if err != nil {
-        return nil, "", err
-    }
+	httpClient := &http.Client{Timeout: 60 * time.Second}
+	req, err := http.NewRequest("GET", resourceURL, nil)
+	if err != nil {
+		return nil, "", err
+	}
 
-    resp, err := httpClient.Do(req)
-    if err != nil {
-        return nil, "", err
-    }
-    defer resp.Body.Close()
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, "", err
+	}
+	defer resp.Body.Close()
 
-    if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-        return nil, "", fmt.Errorf("unexpected status code %d", resp.StatusCode)
-    }
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, "", fmt.Errorf("unexpected status code %d", resp.StatusCode)
+	}
 
-    // Limit download size to 100MB to prevent excessive memory usage.
-    limited := &io.LimitedReader{R: resp.Body, N: 100 * 1024 * 1024}
-    data, err := io.ReadAll(limited)
-    if err != nil {
-        return nil, "", err
-    }
+	// Limit download size to 100MB to prevent excessive memory usage.
+	limited := &io.LimitedReader{R: resp.Body, N: 100 * 1024 * 1024}
+	data, err := io.ReadAll(limited)
+	if err != nil {
+		return nil, "", err
+	}
 
-    contentType := resp.Header.Get("Content-Type")
-    if contentType == "" {
-        contentType = http.DetectContentType(data)
-    }
+	contentType := resp.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = http.DetectContentType(data)
+	}
 
-    return data, contentType, nil
+	return data, contentType, nil
 }
 
 // messageTypes moved to constants.go as supportedEventTypes
@@ -799,34 +799,34 @@ func (s *server) SendDocument() http.HandlerFunc {
 			msgid = t.Id
 		}
 
-        var uploaded whatsmeow.UploadResponse
-        var filedata []byte
+		var uploaded whatsmeow.UploadResponse
+		var filedata []byte
 
-        if len(t.Document) >= 29 && t.Document[0:29] == "data:application/octet-stream" {
-            var dataURL, err = dataurl.DecodeString(t.Document)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
-                return
-            } else {
-                filedata = dataURL.Data
-            }
-        } else if isHTTPURL(t.Document) {
-            data, _, err := fetchURLBytes(t.Document)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch document from url: %v", err)))
-                return
-            }
-            filedata = data
-        } else {
-            s.Respond(w, r, http.StatusBadRequest, errors.New("document data should be a data URL starting with \"data:application/octet-stream;base64,\" or a valid HTTP/HTTPS URL"))
-            return
-        }
+		if len(t.Document) >= 29 && t.Document[0:29] == "data:application/octet-stream" {
+			var dataURL, err = dataurl.DecodeString(t.Document)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
+				return
+			} else {
+				filedata = dataURL.Data
+			}
+		} else if isHTTPURL(t.Document) {
+			data, _, err := fetchURLBytes(t.Document)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch document from url: %v", err)))
+				return
+			}
+			filedata = data
+		} else {
+			s.Respond(w, r, http.StatusBadRequest, errors.New("document data should be a data URL starting with \"data:application/octet-stream;base64,\" or a valid HTTP/HTTPS URL"))
+			return
+		}
 
-        uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaDocument)
-        if err != nil {
-            s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
-            return
-        }
+		uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaDocument)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
+			return
+		}
 
 		msg := &waE2E.Message{DocumentMessage: &waE2E.DocumentMessage{
 			URL:        proto.String(uploaded.URL),
@@ -881,11 +881,12 @@ func (s *server) SendDocument() http.HandlerFunc {
 func (s *server) SendAudio() http.HandlerFunc {
 
 	type audioStruct struct {
-		Phone       string
-		Audio       string
-		Caption     string
-		Id          string
-		ContextInfo waE2E.ContextInfo
+		Phone           string
+		Audio           string
+		Caption         string
+		Id              string
+		BackgroundColor interface{} `json:"backgroundColor,omitempty"`
+		ContextInfo     waE2E.ContextInfo
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -930,34 +931,106 @@ func (s *server) SendAudio() http.HandlerFunc {
 			msgid = t.Id
 		}
 
-        var uploaded whatsmeow.UploadResponse
-        var filedata []byte
+		var uploaded whatsmeow.UploadResponse
+		var filedata []byte
 
-        if len(t.Audio) >= 14 && t.Audio[0:14] == "data:audio/ogg" {
-            var dataURL, err = dataurl.DecodeString(t.Audio)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
-                return
-            } else {
-                filedata = dataURL.Data
-            }
-        } else if isHTTPURL(t.Audio) {
-            data, _, err := fetchURLBytes(t.Audio)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch audio from url: %v", err)))
-                return
-            }
-            filedata = data
-        } else {
-            s.Respond(w, r, http.StatusBadRequest, errors.New("audio data should be a data URL starting with \"data:audio/ogg;base64,\" or a valid HTTP/HTTPS URL"))
-            return
-        }
+		if len(t.Audio) >= 14 && t.Audio[0:14] == "data:audio/ogg" {
+			var dataURL, err = dataurl.DecodeString(t.Audio)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
+				return
+			} else {
+				filedata = dataURL.Data
+			}
+		} else if isHTTPURL(t.Audio) {
+			data, contentType, err1 := fetchURLBytes(t.Audio)
+			if err1 != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New("failed to fetch audio from url"))
+				return
+			}
 
-        uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaAudio)
-        if err != nil {
-            s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
-            return
-        }
+			// Valida se os dados não estão vazios
+			if len(data) == 0 {
+				s.Respond(w, r, http.StatusBadRequest, errors.New("received empty audio data from URL"))
+				return
+			}
+
+			// Valida o tipo de conteúdo se disponível
+			if contentType != "" && !strings.Contains(strings.ToLower(contentType), "audio") {
+				log.Warn().Str("contentType", contentType).Msg("URL may not contain audio data")
+			}
+
+			// Validação básica do tamanho mínimo
+			if len(data) < 4 {
+				s.Respond(w, r, http.StatusBadRequest, errors.New("audio file too small to be valid"))
+				return
+			}
+
+			// Verifica se já é OGG/Opus ou precisa converter
+			isOggFormat := len(data) >= 4 && string(data[0:4]) == "OggS"
+			needsConversion := !isOggFormat || (contentType != "" && contentType != "audio/ogg; codecs=opus")
+
+			if needsConversion {
+				log.Info().Str("contentType", contentType).Bool("isOgg", isOggFormat).Msg("Converting audio to OGG/Opus format")
+
+				convertedData, err := ConvertAudioToOggOpus(data)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to convert audio to OGG/Opus")
+					s.Respond(w, r, http.StatusBadRequest, errors.New("failed to convert audio to required format"))
+					return
+				}
+				filedata = convertedData
+				log.Debug().Int("original_size", len(data)).Int("converted_size", len(filedata)).Msg("Audio converted to OGG/Opus successfully")
+			} else {
+				// Já está no formato correto
+				filedata = data
+				log.Debug().Int("filedata_size", len(filedata)).Msg("Audio already in OGG/Opus format")
+			}
+		} else {
+			s.Respond(w, r, http.StatusBadRequest, errors.New("audio data should be a data URL starting with \"data:audio/ogg;base64,\" or a valid HTTP/HTTPS URL"))
+			return
+		}
+
+		// Gera waveform (64 amostras 0..100), duração e cor de fundo a partir do OGG/Opus
+		var waveform []byte
+		var audioDuration uint32
+		var backgroundColor uint32
+		if len(filedata) > 0 {
+			// Gera waveform
+			wf, err := GenerateAudioWaveformFromOggOpus(filedata)
+			if err != nil {
+				log.Debug().Err(err).Msg("Failed to generate waveform - audio may be corrupted or invalid format")
+			} else {
+				waveform = wf
+				log.Debug().Int("waveform_length", len(waveform)).Msg("Waveform generated successfully")
+			}
+
+			// Obtém duração do áudio
+			duration, err := GetAudioDuration(filedata)
+			if err != nil {
+				log.Debug().Err(err).Msg("Failed to get audio duration - ffprobe may not be available or audio is invalid")
+			} else {
+				audioDuration = duration
+				log.Debug().Uint32("duration_seconds", audioDuration).Msg("Audio duration obtained successfully")
+			}
+
+			// Processa cor de fundo se fornecida (para PTT)
+			if t.BackgroundColor != nil {
+				bgColor, err := AssertColor(t.BackgroundColor)
+				if err != nil {
+					log.Debug().Err(err).Interface("color", t.BackgroundColor).Msg("Failed to process background color - invalid color format")
+				} else {
+					backgroundColor = bgColor
+					log.Debug().Uint32("background_color", backgroundColor).Msg("Background color processed successfully")
+				}
+			}
+		}
+
+		uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaAudio)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New("failed to upload file"))
+			return
+		}
 
 		ptt := true
 		mime := "audio/ogg; codecs=opus"
@@ -973,6 +1046,15 @@ func (s *server) SendAudio() http.HandlerFunc {
 			FileLength:    proto.Uint64(uint64(len(filedata))),
 			PTT:           &ptt,
 		}}
+		if len(waveform) > 0 {
+			msg.AudioMessage.Waveform = waveform
+		}
+		if audioDuration > 0 {
+			msg.AudioMessage.Seconds = proto.Uint32(audioDuration)
+		}
+		if backgroundColor > 0 {
+			msg.AudioMessage.BackgroundArgb = proto.Uint32(backgroundColor)
+		}
 
 		if t.ContextInfo.StanzaID != nil {
 			msg.ExtendedTextMessage.ContextInfo = &waE2E.ContextInfo{
@@ -1060,69 +1142,69 @@ func (s *server) SendImage() http.HandlerFunc {
 			msgid = t.Id
 		}
 
-        var uploaded whatsmeow.UploadResponse
-        var filedata []byte
-        var thumbnailBytes []byte
+		var uploaded whatsmeow.UploadResponse
+		var filedata []byte
+		var thumbnailBytes []byte
 
-        if len(t.Image) >= 10 && t.Image[0:10] == "data:image" {
-            var dataURL, err = dataurl.DecodeString(t.Image)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
-                return
-            } else {
-                filedata = dataURL.Data
-            }
-        } else if isHTTPURL(t.Image) {
-            data, ct, err := fetchURLBytes(t.Image)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch image from url: %v", err)))
-                return
-            }
-            mimeType := ct
-            if !strings.HasPrefix(strings.ToLower(mimeType), "image/") {
-                mimeType = "image/jpeg"
-            }
-            filedata = data
-        } else {
-            s.Respond(w, r, http.StatusBadRequest, errors.New("Image data should be a data URL starting with \"data:image/png;base64,\" or a valid HTTP/HTTPS URL"))
-            return
-        }
+		if len(t.Image) >= 10 && t.Image[0:10] == "data:image" {
+			var dataURL, err = dataurl.DecodeString(t.Image)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
+				return
+			} else {
+				filedata = dataURL.Data
+			}
+		} else if isHTTPURL(t.Image) {
+			data, ct, err := fetchURLBytes(t.Image)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch image from url: %v", err)))
+				return
+			}
+			mimeType := ct
+			if !strings.HasPrefix(strings.ToLower(mimeType), "image/") {
+				mimeType = "image/jpeg"
+			}
+			filedata = data
+		} else {
+			s.Respond(w, r, http.StatusBadRequest, errors.New("Image data should be a data URL starting with \"data:image/png;base64,\" or a valid HTTP/HTTPS URL"))
+			return
+		}
 
-        uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaImage)
-        if err != nil {
-            s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
-            return
-        }
+		uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaImage)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
+			return
+		}
 
-        // decode jpeg into image.Image
-        reader := bytes.NewReader(filedata)
-        img, _, err := image.Decode(reader)
-        if err != nil {
-            s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("could not decode image for thumbnail preparation: %v", err)))
-            return
-        }
+		// decode jpeg into image.Image
+		reader := bytes.NewReader(filedata)
+		img, _, err := image.Decode(reader)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("could not decode image for thumbnail preparation: %v", err)))
+			return
+		}
 
-        // resize to width 72 using Lanczos resampling and preserve aspect ratio
-        m := resize.Thumbnail(72, 72, img, resize.Lanczos3)
+		// resize to width 72 using Lanczos resampling and preserve aspect ratio
+		m := resize.Thumbnail(72, 72, img, resize.Lanczos3)
 
-        tmpFile, err := os.CreateTemp("", "resized-*.jpg")
-        if err != nil {
-            s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Could not create temp file for thumbnail: %v", err)))
-            return
-        }
-        defer tmpFile.Close()
+		tmpFile, err := os.CreateTemp("", "resized-*.jpg")
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Could not create temp file for thumbnail: %v", err)))
+			return
+		}
+		defer tmpFile.Close()
 
-        // write new image to file
-        if err := jpeg.Encode(tmpFile, m, nil); err != nil {
-            s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to encode jpeg: %v", err)))
-            return
-        }
+		// write new image to file
+		if err := jpeg.Encode(tmpFile, m, nil); err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to encode jpeg: %v", err)))
+			return
+		}
 
-        thumbnailBytes, err = os.ReadFile(tmpFile.Name())
-        if err != nil {
-            s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to read %s: %v", tmpFile.Name(), err)))
-            return
-        }
+		thumbnailBytes, err = os.ReadFile(tmpFile.Name())
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to read %s: %v", tmpFile.Name(), err)))
+			return
+		}
 
 		msg := &waE2E.Message{ImageMessage: &waE2E.ImageMessage{
 			Caption:    proto.String(t.Caption),
@@ -1227,38 +1309,38 @@ func (s *server) SendSticker() http.HandlerFunc {
 			msgid = t.Id
 		}
 
-        var uploaded whatsmeow.UploadResponse
-        var filedata []byte
+		var uploaded whatsmeow.UploadResponse
+		var filedata []byte
 
-        if len(t.Sticker) >= 4 && t.Sticker[0:4] == "data" {
-            var dataURL, err = dataurl.DecodeString(t.Sticker)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
-                return
-            } else {
-                filedata = dataURL.Data
-            }
-        } else if isHTTPURL(t.Sticker) {
-            data, ct, err := fetchURLBytes(t.Sticker)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch sticker from url: %v", err)))
-                return
-            }
-            mimeType := ct
-            if mimeType == "" {
-                mimeType = "image/webp"
-            }
-            filedata = data
-        } else {
-            s.Respond(w, r, http.StatusBadRequest, errors.New("Data should be a data URL starting with \"data:mime/type;base64,\" or a valid HTTP/HTTPS URL"))
-            return
-        }
+		if len(t.Sticker) >= 4 && t.Sticker[0:4] == "data" {
+			var dataURL, err = dataurl.DecodeString(t.Sticker)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
+				return
+			} else {
+				filedata = dataURL.Data
+			}
+		} else if isHTTPURL(t.Sticker) {
+			data, ct, err := fetchURLBytes(t.Sticker)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch sticker from url: %v", err)))
+				return
+			}
+			mimeType := ct
+			if mimeType == "" {
+				mimeType = "image/webp"
+			}
+			filedata = data
+		} else {
+			s.Respond(w, r, http.StatusBadRequest, errors.New("Data should be a data URL starting with \"data:mime/type;base64,\" or a valid HTTP/HTTPS URL"))
+			return
+		}
 
-        uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaImage)
-        if err != nil {
-            s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to upload file: %v", err)))
-            return
-        }
+		uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaImage)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("Failed to upload file: %v", err)))
+			return
+		}
 
 		msg := &waE2E.Message{StickerMessage: &waE2E.StickerMessage{
 			URL:        proto.String(uploaded.URL),
@@ -1363,44 +1445,44 @@ func (s *server) SendVideo() http.HandlerFunc {
 			msgid = t.Id
 		}
 
-        var uploaded whatsmeow.UploadResponse
-        var filedata []byte
+		var uploaded whatsmeow.UploadResponse
+		var filedata []byte
 
-        if len(t.Video) >= 4 && t.Video[0:4] == "data" {
-            var dataURL, err = dataurl.DecodeString(t.Video)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
-                return
-            } else {
-                filedata = dataURL.Data
-            }
-        } else if isHTTPURL(t.Video) {
-            data, ct, err := fetchURLBytes(t.Video)
-            if err != nil {
-                s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch video from url: %v", err)))
-                return
-            }
-            mimeType := ct
-            if !strings.HasPrefix(strings.ToLower(mimeType), "video/") {
-                mimeType = "video/mp4"
-            }
-            vidDataURL := dataurl.New(data, mimeType)
-            parsed, err := dataurl.DecodeString(vidDataURL.String())
-            if err != nil {
-                s.Respond(w, r, http.StatusInternalServerError, errors.New("could not re-encode video to base64"))
-                return
-            }
-            filedata = parsed.Data
-        } else {
-            s.Respond(w, r, http.StatusBadRequest, errors.New("data should be a data URL starting with \"data:mime/type;base64,\" or a valid HTTP/HTTPS URL"))
-            return
-        }
+		if len(t.Video) >= 4 && t.Video[0:4] == "data" {
+			var dataURL, err = dataurl.DecodeString(t.Video)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New("could not decode base64 encoded data from payload"))
+				return
+			} else {
+				filedata = dataURL.Data
+			}
+		} else if isHTTPURL(t.Video) {
+			data, ct, err := fetchURLBytes(t.Video)
+			if err != nil {
+				s.Respond(w, r, http.StatusBadRequest, errors.New(fmt.Sprintf("failed to fetch video from url: %v", err)))
+				return
+			}
+			mimeType := ct
+			if !strings.HasPrefix(strings.ToLower(mimeType), "video/") {
+				mimeType = "video/mp4"
+			}
+			vidDataURL := dataurl.New(data, mimeType)
+			parsed, err := dataurl.DecodeString(vidDataURL.String())
+			if err != nil {
+				s.Respond(w, r, http.StatusInternalServerError, errors.New("could not re-encode video to base64"))
+				return
+			}
+			filedata = parsed.Data
+		} else {
+			s.Respond(w, r, http.StatusBadRequest, errors.New("data should be a data URL starting with \"data:mime/type;base64,\" or a valid HTTP/HTTPS URL"))
+			return
+		}
 
-        uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaVideo)
-        if err != nil {
-            s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
-            return
-        }
+		uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaVideo)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
+			return
+		}
 
 		msg := &waE2E.Message{VideoMessage: &waE2E.VideoMessage{
 			Caption:    proto.String(t.Caption),
