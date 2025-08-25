@@ -70,7 +70,9 @@ func fetchURLBytes(resourceURL string) ([]byte, string, error) {
         return nil, "", fmt.Errorf("unexpected status code %d", resp.StatusCode)
     }
 
-    data, err := io.ReadAll(resp.Body)
+    // Limit download size to 100MB to prevent excessive memory usage.
+    limitedBody := &http.MaxBytesReader{R: resp.Body, N: 100 * 1024 * 1024}
+    data, err := io.ReadAll(limitedBody)
     if err != nil {
         return nil, "", err
     }
