@@ -1100,7 +1100,7 @@ func (s *server) SendImage() http.HandlerFunc {
             }
             filedata = parsed.Data
         } else {
-            s.Respond(w, r, http.StatusBadRequest, errors.New("Image data should start with \"data:image/png;base64,\""))
+            s.Respond(w, r, http.StatusBadRequest, errors.New("Image data should be a data URL starting with \"data:image/png;base64,\" or a valid HTTP/HTTPS URL"))
             return
         }
 
