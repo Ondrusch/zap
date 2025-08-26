@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	_ "image/gif"
 	"image/jpeg"
+	_ "image/png"
 	"io"
 	"net/http"
 	"net/url"
@@ -83,6 +85,30 @@ func fetchURLBytes(resourceURL string) ([]byte, string, error) {
 	}
 
 	return data, contentType, nil
+}
+
+// convertToJPEG converts any image format to JPEG
+func convertToJPEG(imageData []byte) ([]byte, error) {
+	// Try to decode the image
+	img, format, err := image.Decode(bytes.NewReader(imageData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode image: %v", err)
+	}
+
+	// If it's already JPEG, return as is
+	if format == "jpeg" {
+		return imageData, nil
+	}
+
+	// Convert to JPEG
+	var buf bytes.Buffer
+	err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: 85})
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode image to JPEG: %v", err)
+	}
+
+	log.Info().Str("original_format", format).Msg("Image converted to JPEG")
+	return buf.Bytes(), nil
 }
 
 // messageTypes moved to constants.go as supportedEventTypes
@@ -1170,6 +1196,13 @@ func (s *server) SendImage() http.HandlerFunc {
 			return
 		}
 
+		// Convert image to JPEG if it's not already in JPEG format
+		filedata, err = convertToJPEG(filedata)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to convert image to JPEG: %v", err)))
+			return
+		}
+
 		uploaded, err = clientManager.GetWhatsmeowClient(txtid).Upload(context.Background(), filedata, whatsmeow.MediaImage)
 		if err != nil {
 			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to upload file: %v", err)))
@@ -1207,16 +1240,11 @@ func (s *server) SendImage() http.HandlerFunc {
 		}
 
 		msg := &waE2E.Message{ImageMessage: &waE2E.ImageMessage{
-			Caption:    proto.String(t.Caption),
-			URL:        proto.String(uploaded.URL),
-			DirectPath: proto.String(uploaded.DirectPath),
-			MediaKey:   uploaded.MediaKey,
-			Mimetype: proto.String(func() string {
-				if t.MimeType != "" {
-					return t.MimeType
-				}
-				return http.DetectContentType(filedata)
-			}()),
+			Caption:       proto.String(t.Caption),
+			URL:           proto.String(uploaded.URL),
+			DirectPath:    proto.String(uploaded.DirectPath),
+			MediaKey:      uploaded.MediaKey,
+			Mimetype:      proto.String("image/jpeg"),
 			FileEncSHA256: uploaded.FileEncSHA256,
 			FileSHA256:    uploaded.FileSHA256,
 			FileLength:    proto.Uint64(uint64(len(filedata))),
@@ -3702,7 +3730,7 @@ func (s *server) SetDisappearingTimer() http.HandlerFunc {
 			return
 		}
 
-		err = clientManager.GetWhatsmeowClient(txtid).SetDisappearingTimer(group, duration)
+		err = clientManager.GetWhatsmeowClient(txtid).SetDisappearingTimer(group, duration, time.Now())
 
 		if err != nil {
 			log.Error().Str("error", fmt.Sprintf("%v", err)).Msg("failed to set disappearing timer")
@@ -3975,9 +4003,10 @@ func (s *server) SetGroupPhoto() http.HandlerFunc {
 			return
 		}
 
-		// Validate JPEG format (WhatsApp requires JPEG)
-		if len(filedata) < 3 || filedata[0] != 0xFF || filedata[1] != 0xD8 || filedata[2] != 0xFF {
-			s.Respond(w, r, http.StatusBadRequest, errors.New("image must be in JPEG format. WhatsApp only accepts JPEG images for group photos"))
+		// Convert image to JPEG format (WhatsApp requires JPEG for group photos)
+		filedata, err = convertToJPEG(filedata)
+		if err != nil {
+			s.Respond(w, r, http.StatusInternalServerError, errors.New(fmt.Sprintf("failed to convert image to JPEG: %v", err)))
 			return
 		}
 
