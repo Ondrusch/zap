@@ -1019,6 +1019,38 @@ func (mycli *MyClient) myEventHandler(rawEvt interface{}) {
 	case *events.HistorySync:
 		postmap["type"] = "HistorySync"
 		dowebhook = 1
+		
+		// Extrair informações básicas do histórico
+		var messages []map[string]interface{}
+		
+		// Processar conversas para extrair informações básicas
+		if len(evt.Data.Conversations) > 0 {
+			for _, conv := range evt.Data.Conversations {
+				// Criar uma mensagem básica com informações da conversa
+				messageData := map[string]interface{}{
+					"Chat":    *conv.ID,
+					"Type":    "conversation",
+					"Message": "Conversa sincronizada",
+					"FromMe":  false,
+					"contato": *conv.ID,
+					"midia url": nil,
+					"ID":      fmt.Sprintf("conv_%s", *conv.ID),
+					"base64":  nil,
+					"unreadCount": conv.UnreadCount,
+				}
+				
+				messages = append(messages, messageData)
+			}
+		}
+		
+		// Adicionar mensagens ao postmap
+		postmap["messages"] = messages
+		
+		// Log simples
+		log.Info().
+			Str("userID", mycli.userID).
+			Int("messages", len(messages)).
+			Msg("HistorySync processed")
 	case *events.AppState:
 		log.Info().Str("index", fmt.Sprintf("%+v", evt.Index)).Str("actionValue", fmt.Sprintf("%+v", evt.SyncActionValue)).Msg("App state event received")
 	case *events.LoggedOut:
