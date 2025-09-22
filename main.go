@@ -69,7 +69,10 @@ func init() {
 	if v := os.Getenv("SESSION_DEVICE_NAME"); v != "" {
 		*osName = v
 	}
-
+// Sobrescreve a porta pelo ENV WUZAPI_PORT, se existir
+if v := os.Getenv("WUZAPI_PORT"); v != "" {
+    *port = v
+}
 	if *versionFlag {
 		fmt.Printf("WuzAPI version %s\n", version)
 		os.Exit(0)
