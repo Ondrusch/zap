@@ -58,30 +58,29 @@ var (
 const version = "1.0.2"
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Warn().Err(err).Msg("It was not possible to load the .env file (it may not exist).")
-	}
+	_ = godotenv.Load() // não precisa logar erro aqui, já tratamos abaixo
 
 	flag.Parse()
 
-	// Novo bloco para sobrescrever o osName pelo ENV, se existir
+	// Sobrescreve o nome do device pelo ENV, se existir
 	if v := os.Getenv("SESSION_DEVICE_NAME"); v != "" {
 		*osName = v
 	}
-	
-//Sobrescreve a porta pelo ENV WUZAPI_PORT, se existir
+
+	// Sobrescreve a porta pelo ENV WUZAPI_PORT, se existir
 	if v := os.Getenv("WUZAPI_PORT"); v != "" {
 		*port = v
 	}
+
+	// Exibir versão e sair
 	if *versionFlag {
 		fmt.Printf("WuzAPI version %s\n", version)
 		os.Exit(0)
 	}
-	tz := os.Getenv("TZ")
-	if tz != "" {
-		loc, err := time.LoadLocation(tz)
-		if err != nil {
+
+	// Configurar timezone
+	if tz := os.Getenv("TZ"); tz != "" {
+		if loc, err := time.LoadLocation(tz); err != nil {
 			log.Warn().Err(err).Msgf("It was not possible to define TZ=%q, using UTC", tz)
 		} else {
 			time.Local = loc
@@ -89,6 +88,7 @@ func init() {
 		}
 	}
 
+	// Configuração do logger
 	if *logType == "json" {
 		log.Logger = zerolog.New(os.Stdout).
 			With().
@@ -101,7 +101,6 @@ func init() {
 			TimeFormat: "2006-01-02 15:04:05 -07:00",
 			NoColor:    !*colorOutput,
 		}
-
 		output.FormatLevel = func(i interface{}) string {
 			if i == nil {
 				return ""
@@ -128,6 +127,7 @@ func init() {
 			Logger()
 	}
 
+	// Configurar admin token
 	if *adminToken == "" {
 		if v := os.Getenv("WUZAPI_ADMIN_TOKEN"); v != "" {
 			*adminToken = v
@@ -143,7 +143,7 @@ func init() {
 		}
 	}
 
-	// Check for global webhook in environment variable
+	// Configurar global webhook
 	if *globalWebhook == "" {
 		if v := os.Getenv("WUZAPI_GLOBAL_WEBHOOK"); v != "" {
 			*globalWebhook = v
