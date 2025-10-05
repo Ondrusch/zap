@@ -75,6 +75,21 @@ func init() {
 		*port = v
 	}
 
+	// Sobrescrever o endereço se definido no ambiente
+	if v := os.Getenv("WUZAPI_ADDRESS"); v != "" {
+		*address = v
+	}
+
+	// Sobrescrever o tipo de log se definido no ambiente
+	if v := os.Getenv("WUZAPI_LOG_TYPE"); v != "" {
+		*logType = v
+	}
+
+	// Sobrescrever o debug do WhatsApp se definido no ambiente
+	if v := os.Getenv("WUZAPI_DEBUG"); v != "" {
+		*waDebug = v
+	}
+
 	if *versionFlag {
 		fmt.Printf("WuzAPI version %s\n", version)
 		os.Exit(0)
