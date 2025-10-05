@@ -35,7 +35,7 @@ type server struct {
 // Replace the global variables
 var (
 	address       = flag.String("address", "0.0.0.0", "Bind IP Address")
-	port          = flag.String("port", "8080", "Listen Port")
+	port          = flag.String("port", "8081", "Listen Port")
 	waDebug       = flag.String("wadebug", "", "Enable whatsmeow debug (INFO or DEBUG)")
 	logType       = flag.String("logtype", "console", "Type of log output (console or json)")
 	skipMedia     = flag.Bool("skipmedia", false, "Do not attempt to download media in messages")
@@ -68,6 +68,11 @@ func init() {
 	// Novo bloco para sobrescrever o osName pelo ENV, se existir
 	if v := os.Getenv("SESSION_DEVICE_NAME"); v != "" {
 		*osName = v
+	}
+
+	// Sobrescrever a porta se definida no ambiente
+	if v := os.Getenv("WUZAPI_PORT"); v != "" {
+		*port = v
 	}
 
 	if *versionFlag {
