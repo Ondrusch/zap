@@ -55,7 +55,7 @@ var (
 	globalHTTPClient = &http.Client{Timeout: 60 * time.Second}
 )
 
-const version = "1.0.2"
+const version = "1.0.3"
 
 func init() {
 	err := godotenv.Load()
@@ -70,11 +70,6 @@ func init() {
 		*osName = v
 	}
 
-	// Sobrescreve a porta pelo ENV WUZAPI_PORT, se existir
-	if v := os.Getenv("WUZAPI_PORT"); v != "" {
-		*port = v
-	}
-	
 	if *versionFlag {
 		fmt.Printf("WuzAPI version %s\n", version)
 		os.Exit(0)
