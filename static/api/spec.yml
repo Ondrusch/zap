@@ -2,14 +2,14 @@ openapi: 3.0.0
 info:
   title: WUZAPI
   description: "WUZAPI implements a multi user and multi device REST API for WhatsApp.\n\n<h2>Authentication</h2><ul><li>Standard Endpoints: Include the token header with a valid user token (matches tokens stored in the users database table).</li><li>Admin Endpoints: Use the Authorization header with the admin token (set in .env as WUZAPI_ADMIN_TOKEN).</li></ul><h2>Admin Setup:</h2>You can manage users and do some tests by using the builtin dashboard [here](/dashboard).<h3>Add a Sample User via API</h3>Run this command to create a test user:<pre><code>curl -X POST http://localhost:8080/admin/users \\ \n-H \"Authorization: $WUZAPI_ADMIN_TOKEN\" \\ \n-H \"Content-Type: application/json\" \\ \n-d '{\"name\": \"John\", \"token\": \"Z1234ABCCXD\"}' </code> </pre>\n\n<h2>Webhook Configuration</h2>To receive WhatsApp messages:<ul><li>Host your own server (to process incoming messages).</li><li>Set its URL as the webhook via the [webhook](#Webhook) API call.</li></ul><h2>Phone number format:</h2><ul><li>Required: Country code (e.g. <b>5491155553934</b> for Argentina</li><li>Do not prefix with a plus sign (+), as natively whatsapp requires no plus sign prefix.</li></ul>"
-  version: '3.0.0'
-  termsOfService: ''
-   
+  version: "3.0.0"
+  termsOfService: ""
+
 schemes:
   - http
 
 servers:
-  - url: '/'
+  - url: "/"
     description: Current host
 
 paths:
@@ -27,7 +27,27 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": [ { "connected": true, "events": "All", "expiration": 0, "id": "bec45bb93cbd24cbec32941ec3c93a12", "jid": "5491155551122:12@s.whatsapp.net", "loggedIn": true, "name": "Some User", "proxy_url": "", "qrcode": "", "token": "d030sl9aDL39sl3075zz", "webhook": "https://some.domain/webhook" } ], "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      [
+                        {
+                          "connected": true,
+                          "events": "All",
+                          "expiration": 0,
+                          "id": "bec45bb93cbd24cbec32941ec3c93a12",
+                          "jid": "5491155551122:12@s.whatsapp.net",
+                          "loggedIn": true,
+                          "name": "Some User",
+                          "proxy_url": "",
+                          "qrcode": "",
+                          "token": "d030sl9aDL39sl3075zz",
+                          "webhook": "https://some.domain/webhook",
+                        },
+                      ],
+                    "success": true,
+                  }
     post:
       tags:
         - Admin
@@ -40,14 +60,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/CreateUser'
+              $ref: "#/definitions/CreateUser"
       responses:
         201:
           description: User created
           content:
             application/json:
               schema:
-                $ref: '#/definitions/User'
+                $ref: "#/definitions/User"
               example:
                 code: 201
                 data:
@@ -92,7 +112,13 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"id":"6b927654cada7635a4586bf8fad260a3"},"details":"User deleted successfully","success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data": { "id": "6b927654cada7635a4586bf8fad260a3" },
+                    "details": "User deleted successfully",
+                    "success": true,
+                  }
   /admin/users/{id}/full:
     delete:
       tags:
@@ -115,7 +141,18 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"id":"4e4942c7dee1deef99ab8fd9f7350de5","jid":"","name":"mariano"},"details":"User instance removed completely","success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "id": "4e4942c7dee1deef99ab8fd9f7350de5",
+                        "jid": "",
+                        "name": "mariano",
+                      },
+                    "details": "User instance removed completely",
+                    "success": true,
+                  }
   /newsletter/list:
     get:
       tags:
@@ -130,12 +167,63 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code": 200, "data": {"Newsletter": [{"id": "120363144038483540@newsletter", "state": {"type": "active" }, "thread_metadata": {"creation_time": "1688746895", "description": {"id": "1689653839450668", "text": "WhatsApp's official channel. Follow for our latest feature launches, updates, exclusive drops and more.", "update_time": "1689653839450668" }, "invite": "0029Va4K0PZ5a245NkngBA2M", "name": {"id": "1688746895480511", "text": "WhatsApp", "update_time": "1688746895480511" }, "picture": {"direct_path": "/v/t61.24694-24/416962407_970228831134395_8869146381947923973_n.jpg?ccb=11-4&oh=01_Q5AaIRyTfP806JEGJDm0XWU5E-D4LcA-Wj3csSwh1jJTVanC&oe=67D550F1&_nc_sid=5e03e0&_nc_cat=110", "id": "1707950960975554", "type": "IMAGE", "url": "" }, "preview": {"direct_path": "/v/t61.24694-24/416962407_970228831134395_8869146381947923973_n.jpg?stp=dst-jpg_s192x192_tt6&ccb=11-4&oh=01_Q5AaIawuPXJUw9grRFJZtAJEc6QNm0XpqJq4X1Ssi9xNI0Qf&oe=67D550F1&_nc_sid=5e03e0&_nc_cat=110", "id": "1707950960975554", "type": "PREVIEW", "url": "" }, "settings": {"reaction_codes": {"value": "ALL" } }, "subscribers_count": "0", "verification": "verified" }, "viewer_metadata": {"mute": "on", "role": "subscriber" } } ] }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Newsletter":
+                          [
+                            {
+                              "id": "120363144038483540@newsletter",
+                              "state": { "type": "active" },
+                              "thread_metadata":
+                                {
+                                  "creation_time": "1688746895",
+                                  "description":
+                                    {
+                                      "id": "1689653839450668",
+                                      "text": "WhatsApp's official channel. Follow for our latest feature launches, updates, exclusive drops and more.",
+                                      "update_time": "1689653839450668",
+                                    },
+                                  "invite": "0029Va4K0PZ5a245NkngBA2M",
+                                  "name":
+                                    {
+                                      "id": "1688746895480511",
+                                      "text": "WhatsApp",
+                                      "update_time": "1688746895480511",
+                                    },
+                                  "picture":
+                                    {
+                                      "direct_path": "/v/t61.24694-24/416962407_970228831134395_8869146381947923973_n.jpg?ccb=11-4&oh=01_Q5AaIRyTfP806JEGJDm0XWU5E-D4LcA-Wj3csSwh1jJTVanC&oe=67D550F1&_nc_sid=5e03e0&_nc_cat=110",
+                                      "id": "1707950960975554",
+                                      "type": "IMAGE",
+                                      "url": "",
+                                    },
+                                  "preview":
+                                    {
+                                      "direct_path": "/v/t61.24694-24/416962407_970228831134395_8869146381947923973_n.jpg?stp=dst-jpg_s192x192_tt6&ccb=11-4&oh=01_Q5AaIawuPXJUw9grRFJZtAJEc6QNm0XpqJq4X1Ssi9xNI0Qf&oe=67D550F1&_nc_sid=5e03e0&_nc_cat=110",
+                                      "id": "1707950960975554",
+                                      "type": "PREVIEW",
+                                      "url": "",
+                                    },
+                                  "settings":
+                                    { "reaction_codes": { "value": "ALL" } },
+                                  "subscribers_count": "0",
+                                  "verification": "verified",
+                                },
+                              "viewer_metadata":
+                                { "mute": "on", "role": "subscriber" },
+                            },
+                          ],
+                      },
+                    "success": true,
+                  }
   /webhook:
     get:
       tags:
         - Webhook
-      summary: Shows webhook 
+      summary: Shows webhook
       description: |
         Gets the configured webhook and subscribed events.
 
@@ -157,12 +245,21 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "subscribe": [ "Message", "ReadReceipt" ], "webhook": "https://example.net/webhook" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "subscribe": ["Message", "ReadReceipt"],
+                        "webhook": "https://example.net/webhook",
+                      },
+                    "success": true,
+                  }
 
     post:
       tags:
         - Webhook
-      summary: Sets webhook 
+      summary: Sets webhook
       description: |
         Sets the webhook that will be used to POST information when messages are received and configures the events to subscribe to.
 
@@ -183,18 +280,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/WebhookSet'
+              $ref: "#/definitions/WebhookSet"
       responses:
         200:
           description: Response
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "WebhookURL": "https://example.net/webhook", "Events": ["Message", "ReadReceipt"] }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "WebhookURL": "https://example.net/webhook",
+                        "Events": ["Message", "ReadReceipt"],
+                      },
+                    "success": true,
+                  }
     delete:
       tags:
         - Webhook
-      summary: Deletes webhook 
+      summary: Deletes webhook
       description: Removes the configured webhook and clears events for the user
       security:
         - ApiKeyAuth: []
@@ -204,7 +310,13 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Webhook and events deleted successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      { "Details": "Webhook and events deleted successfully" },
+                    "success": true,
+                  }
     put:
       tags:
         - Webhook
@@ -229,18 +341,28 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/WebhookUpdate'
+              $ref: "#/definitions/WebhookUpdate"
       responses:
         200:
           description: Response
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "WebhookURL": "https://example.net/webhook", "Events": ["Message", "ReadReceipt"], "active": true }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "WebhookURL": "https://example.net/webhook",
+                        "Events": ["Message", "ReadReceipt"],
+                        "active": true,
+                      },
+                    "success": true,
+                  }
   /session/connect:
     post:
       tags:
-        - Session 
+        - Session
       summary: connects to WhatsApp servers
       description: "Initiates connection to WhatsApp servers.\n\nIf there is no previous session created, it will generate a QR code that can be retrieved via the [qr](#/Session/get_session_qr) API call.\n\nIf the optional Subscribe is supplied it will limit webhooks to the specified event types: Message,ReadReceipt,Presence,HistorySync,ChatPresence.\n\nIf no Subscribe is supplied it will subscribe to All events.\n\nIf Immediate is set to false, the action will wait for 10 seconds to retrieve actual connection status from whatsapp, otherwise it will return immediatly.\n\nWhen setting Immediate to true you should check for actual connection status after a few seconds via the [status](#/Session/get_session_status) API call as your connection might fail if the session was closed from another device."
       security:
@@ -250,7 +372,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/Connect'
+              $ref: "#/definitions/Connect"
 
       responses:
         200:
@@ -259,13 +381,24 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "details": "Connected!", "events": "Message", "jid": "5491155555555.0:53@s.whatsapp.net", "webhook": "https://some.site/webhook?request=parameter" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "details": "Connected!",
+                        "events": "Message",
+                        "jid": "5491155555555.0:53@s.whatsapp.net",
+                        "webhook": "https://some.site/webhook?request=parameter",
+                      },
+                    "success": true,
+                  }
   /session/disconnect:
     post:
       tags:
-        - Session 
+        - Session
       summary: disconnects from WhatsApp servers
-      description: Closes connection to WhatsApp servers. Session is not terminated, that means that calling connect again will reuse the previous session avoiding QR code scanning 
+      description: Closes connection to WhatsApp servers. Session is not terminated, that means that calling connect again will reuse the previous session avoiding QR code scanning
       security:
         - ApiKeyAuth: []
       responses:
@@ -274,12 +407,17 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Disconnected" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Disconnected" },
+                    "success": true,
+                  }
   /session/logout:
     post:
       tags:
-        - Session 
-      summary: Logs out from WhatsApp 
+        - Session
+      summary: Logs out from WhatsApp
       description: Closes connection to WhatsApp servers and terminate session. That means that next time connect is issued, QR scan will be needed from phone to connect again
       security:
         - ApiKeyAuth: []
@@ -289,11 +427,16 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Logged out" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Logged out" },
+                    "success": true,
+                  }
   /session/status:
     get:
       tags:
-        - Session 
+        - Session
       summary: Gets connection and session status
       description: Gets status from connection, including websocket connection and logged in status (session)
       security:
@@ -304,7 +447,12 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Connected": true, "LoggedIn": true }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Connected": true, "LoggedIn": true },
+                    "success": true,
+                  }
   /session/pairphone:
     post:
       tags:
@@ -318,18 +466,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/Pairphone'
+              $ref: "#/definitions/Pairphone"
       responses:
         200:
           description: Response
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "LinkingCode" : "9H3J-H3J8" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "LinkingCode": "9H3J-H3J8" },
+                    "success": true,
+                  }
   /session/qr:
     get:
       tags:
-        - Session 
+        - Session
       summary: Gets QR code for scanning
       description: Gets QR code if the user is connected but not logged in. If the user is already logged in, QRCode will be empty.
       security:
@@ -340,7 +493,15 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "QRCode": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEX///8AAABVwtN+AAAEw0lEQVR42uyZPa7zqhaGX0ThLmsCkZlGCktMKaU76FxmSkgUmQZWJkA6CuT3avlLvrNvvRMX9x6KXWQ/UhCsn2cR/Lv+v5YhudQ6njEs1bBjqGYDwlJJpoOAArtUbK4Pi5jN3qPAlCkstcAeBazMUaoj78RpxGW4yWYzWVfmzwFLlLX4O+VkkucN5tFDOxiIAvfoA/X4uVQ4sgUcCBTYCG7AEGGKvbdrBabQ8OOyvg3ovm4ynqfLXJ9rvi+303ie5vm/gvZXgK6BLC7fo5hiG4KwW7b6I/2+DJi1+ybVFQyx6o6bbKPVDCyjTwcBZB9uevBtAEafhiosCFH/4kNA8i1gg02B3KxezGbzEjUCDgIwYppR3SNdgtY3H0M1j8xFzCscvg/8uQvZAB9piidv1RXfZhbHdAwAlzsCNCaJDdMF4WQeeSGACZ8BMNl4FZYJA7j2YalPPhhngetHAaZPcyBg2wyYdAk0fKQ5yPja5PcBzTZW4uxJ2bTGwmxnu/BH4vwSgEsYItcCH+VZJt/AYhmHatbXdX8d2JvaTVzxCVW2aVhqheXSqvnR9b4L6AoUx3zX+jZd5rDB5jbLuv0txd8GRs+liuv+TsKloQWujxxRYf5s8gOA7fMVK9PQuDtMNCx2ibIdCMCy1s0yQU6Od9bqim1BuzoOAgzTHOiKv0d5Mt+XClN8DBxN/wxg2G2DbDYNJExCqE+Ne8poXoLxdUA/w5VrnxBQ9fjlqaJMwWgPAzLjtfKRW4A21ojnStX0dX2d5PeB0fawu2pChcuM4bk+tLmbMn0GMJslb5ptDXySbb5W1+0SyVcJOgRIQxSc7X0RUSvGs2DSeaz4gwCMNi/7XNACZc0KbPBtruv2KQA+DVFladBvt4xywhmh1Xd2fx8wzGTUltqCWrHWgqL7Jg8E0hSiFJfbUJ/Fpx3L1OHsVR8+APgoZMclUKvcft2+zTBrwjHArosim4ZcfW4Y4lVWnYXg2A8C9C5aEFXDoEJzmXFyfZoH/p0Wvw7oXoZbNQ823ase1wk2DQ3u7XK/BkzOqovwpM68Ko+jUyPFu6F8H4DvqsAuaUMZJ6+azjTPdS32KMBkLnpQ3VPnbsZgiktALW91/wDQEV5V7gT4JT6L62GRzeV0EDDC7rVFax2ZW6Aa6V5h/FEAgBlSbLrMVScU1s09+jxwG/9q87cB/Yxw3acBsk2Yw+nPf9Y1p88ARlNPtvPkF3LlPQYp8MtSx/FtpF8H4DNrZd8fOtTOxJSzXdo/c/fXAbN2DLeKs1dxHeEZZVWaju/3h18CcDk3qePZpllglDZ89MCq8nIQoDPAVaPi3iAFFwS1xjjr+HcYwD+hri216vBZzQbbZsE44RhAp+sQxfTpApGCoV1NOfsl4pX+nwC65a1uLnkK9TSuVTOhaQ4cBOzvtDcZXU5Bdl28SrF9HqrZJhwD7O/VsZpi7xSz7pXW6ahQ1/dB/RrYf2QhLBmr1lNINVRZfw9BBwArc4SszGlWWd2fxB9cFvJQYKnUUWAgV22y5v1e/ffHpiOAqMLCiOpymwNGtxvk9s8mfwcU2CiydqvJbdKuSX0K8a/KHQDsMQkyeVbtISFif8mRcfwRtF8F/l3/O+s/AQAA///lM0dZSaTeTQAAAABJRU5ErkJggg==" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "QRCode": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEX///8AAABVwtN+AAAEw0lEQVR42uyZPa7zqhaGX0ThLmsCkZlGCktMKaU76FxmSkgUmQZWJkA6CuT3avlLvrNvvRMX9x6KXWQ/UhCsn2cR/Lv+v5YhudQ6njEs1bBjqGYDwlJJpoOAArtUbK4Pi5jN3qPAlCkstcAeBazMUaoj78RpxGW4yWYzWVfmzwFLlLX4O+VkkucN5tFDOxiIAvfoA/X4uVQ4sgUcCBTYCG7AEGGKvbdrBabQ8OOyvg3ovm4ynqfLXJ9rvi+303ie5vm/gvZXgK6BLC7fo5hiG4KwW7b6I/2+DJi1+ybVFQyx6o6bbKPVDCyjTwcBZB9uevBtAEafhiosCFH/4kNA8i1gg02B3KxezGbzEjUCDgIwYppR3SNdgtY3H0M1j8xFzCscvg/8uQvZAB9piidv1RXfZhbHdAwAlzsCNCaJDdMF4WQeeSGACZ8BMNl4FZYJA7j2YalPPhhngetHAaZPcyBg2wyYdAk0fKQ5yPja5PcBzTZW4uxJ2bTGwmxnu/BH4vwSgEsYItcCH+VZJt/AYhmHatbXdX8d2JvaTVzxCVW2aVhqheXSqvnR9b4L6AoUx3zX+jZd5rDB5jbLuv0txd8GRs+liuv+TsKloQWujxxRYf5s8gOA7fMVK9PQuDtMNCx2ibIdCMCy1s0yQU6Od9bqim1BuzoOAgzTHOiKv0d5Mt+XClN8DBxN/wxg2G2DbDYNJExCqE+Ne8poXoLxdUA/w5VrnxBQ9fjlqaJMwWgPAzLjtfKRW4A21ojnStX0dX2d5PeB0fawu2pChcuM4bk+tLmbMn0GMJslb5ptDXySbb5W1+0SyVcJOgRIQxSc7X0RUSvGs2DSeaz4gwCMNi/7XNACZc0KbPBtruv2KQA+DVFladBvt4xywhmh1Xd2fx8wzGTUltqCWrHWgqL7Jg8E0hSiFJfbUJ/Fpx3L1OHsVR8+APgoZMclUKvcft2+zTBrwjHArosim4ZcfW4Y4lVWnYXg2A8C9C5aEFXDoEJzmXFyfZoH/p0Wvw7oXoZbNQ823ase1wk2DQ3u7XK/BkzOqovwpM68Ko+jUyPFu6F8H4DvqsAuaUMZJ6+azjTPdS32KMBkLnpQ3VPnbsZgiktALW91/wDQEV5V7gT4JT6L62GRzeV0EDDC7rVFax2ZW6Aa6V5h/FEAgBlSbLrMVScU1s09+jxwG/9q87cB/Yxw3acBsk2Yw+nPf9Y1p88ARlNPtvPkF3LlPQYp8MtSx/FtpF8H4DNrZd8fOtTOxJSzXdo/c/fXAbN2DLeKs1dxHeEZZVWaju/3h18CcDk3qePZpllglDZ89MCq8nIQoDPAVaPi3iAFFwS1xjjr+HcYwD+hri216vBZzQbbZsE44RhAp+sQxfTpApGCoV1NOfsl4pX+nwC65a1uLnkK9TSuVTOhaQ4cBOzvtDcZXU5Bdl28SrF9HqrZJhwD7O/VsZpi7xSz7pXW6ahQ1/dB/RrYf2QhLBmr1lNINVRZfw9BBwArc4SszGlWWd2fxB9cFvJQYKnUUWAgV22y5v1e/ffHpiOAqMLCiOpymwNGtxvk9s8mfwcU2CiydqvJbdKuSX0K8a/KHQDsMQkyeVbtISFif8mRcfwRtF8F/l3/O+s/AQAA///lM0dZSaTeTQAAAABJRU5ErkJggg==",
+                      },
+                    "success": true,
+                  }
   /session/proxy:
     post:
       tags:
@@ -401,14 +562,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/S3Config'
+              $ref: "#/definitions/S3Config"
       responses:
         200:
           description: S3 configuration saved successfully
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "S3 configuration saved successfully", "Enabled": true }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "S3 configuration saved successfully",
+                        "Enabled": true,
+                      },
+                    "success": true,
+                  }
         400:
           description: Bad Request
         500:
@@ -426,7 +596,23 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "enabled": true, "endpoint": "https://s3.amazonaws.com", "region": "us-east-1", "bucket": "my-bucket", "access_key": "***", "path_style": false, "public_url": "", "media_delivery": "both", "retention_days": 30 }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "enabled": true,
+                        "endpoint": "https://s3.amazonaws.com",
+                        "region": "us-east-1",
+                        "bucket": "my-bucket",
+                        "access_key": "***",
+                        "path_style": false,
+                        "public_url": "",
+                        "media_delivery": "both",
+                        "retention_days": 30,
+                      },
+                    "success": true,
+                  }
         500:
           description: Internal Server Error
     delete:
@@ -442,7 +628,13 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "S3 configuration deleted successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      { "Details": "S3 configuration deleted successfully" },
+                    "success": true,
+                  }
         500:
           description: Internal Server Error
   /session/s3/test:
@@ -459,7 +651,17 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "S3 connection test successful", "Bucket": "my-bucket", "Region": "us-east-1" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "S3 connection test successful",
+                        "Bucket": "my-bucket",
+                        "Region": "us-east-1",
+                      },
+                    "success": true,
+                  }
         400:
           description: S3 is not enabled or configuration error
         500:
@@ -477,8 +679,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/Checkuser'
-
+              $ref: "#/definitions/Checkuser"
 
       responses:
         200:
@@ -486,7 +687,35 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Users": { "5491155553935@s.whatsapp.net": { "Devices": [], "PictureID": "", "Status": "", "VerifiedName": null }, "5491155553934@s.whatsapp.net": { "Devices": [ "5491155553934.0:0@s.whatsapp.net", "5491155955934.0:6@s.whatsapp.net", ], "PictureID": "1582328807", "Status": "🇦🇷", "VerifiedName": null } } }, "success": true } 
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Users":
+                          {
+                            "5491155553935@s.whatsapp.net":
+                              {
+                                "Devices": [],
+                                "PictureID": "",
+                                "Status": "",
+                                "VerifiedName": null,
+                              },
+                            "5491155553934@s.whatsapp.net":
+                              {
+                                "Devices":
+                                  [
+                                    "5491155553934.0:0@s.whatsapp.net",
+                                    "5491155955934.0:6@s.whatsapp.net",
+                                  ],
+                                "PictureID": "1582328807",
+                                "Status": "🇦🇷",
+                                "VerifiedName": null,
+                              },
+                          },
+                      },
+                    "success": true,
+                  }
   /user/check:
     post:
       tags:
@@ -500,8 +729,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/Checkuser'
-
+              $ref: "#/definitions/Checkuser"
 
       responses:
         200:
@@ -509,7 +737,29 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Users": [ { "IsInWhatsapp": true, "JID": "5491155553934@s.whatsapp.net", "Query": "5491155553934", "VerifiedName": "Company Name" }, { "IsInWhatsapp": false, "JID": "5491155553935@s.whatsapp.net", "Query": "5491155553935", "VerifiedName": "" } ] }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Users":
+                          [
+                            {
+                              "IsInWhatsapp": true,
+                              "JID": "5491155553934@s.whatsapp.net",
+                              "Query": "5491155553934",
+                              "VerifiedName": "Company Name",
+                            },
+                            {
+                              "IsInWhatsapp": false,
+                              "JID": "5491155553935@s.whatsapp.net",
+                              "Query": "5491155553935",
+                              "VerifiedName": "",
+                            },
+                          ],
+                      },
+                    "success": true,
+                  }
   /user/presence:
     post:
       tags:
@@ -523,7 +773,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/UserPresence'
+              $ref: "#/definitions/UserPresence"
 
       responses:
         200:
@@ -531,13 +781,23 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code": 200, "data": {"Details": "Presence set successfuly"}, "success": true}
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Presence set successfuly" },
+                    "success": true,
+                  }
         400:
           description: Response
           content:
             application/json:
               schema:
-                example: {"code": 400,"error": "Invalid presence type. Allowed values: 'available', 'unavailable'","success": false}
+                example:
+                  {
+                    "code": 400,
+                    "error": "Invalid presence type. Allowed values: 'available', 'unavailable'",
+                    "success": false,
+                  }
   /user/avatar:
     post:
       tags:
@@ -551,8 +811,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/Checkavatar'
-
+              $ref: "#/definitions/Checkavatar"
 
       responses:
         200:
@@ -560,7 +819,13 @@ paths:
           content:
             application/json:
               schema:
-                example: { "URL": "https://pps.whatsapp.net/v/t61.24694-24/227295214_112447507729487_4643695328050510566_n.jpg?stp=dst-jpg_s96x96&ccb=11-4&oh=ja432434a91e8f41d86d341bx889c217&oe=543222A4", "ID": "1645308319", "Type": "preview", "DirectPath": "/v/t61.24694-24/227295214_112447507729487_4643695328050510566_n.jpg?stp=dst-jpg_s96x96&ccb=11-4&oh=ja432434a91e8f41d86d341ba889c217&oe=543222A4" }
+                example:
+                  {
+                    "URL": "https://pps.whatsapp.net/v/t61.24694-24/227295214_112447507729487_4643695328050510566_n.jpg?stp=dst-jpg_s96x96&ccb=11-4&oh=ja432434a91e8f41d86d341bx889c217&oe=543222A4",
+                    "ID": "1645308319",
+                    "Type": "preview",
+                    "DirectPath": "/v/t61.24694-24/227295214_112447507729487_4643695328050510566_n.jpg?stp=dst-jpg_s96x96&ccb=11-4&oh=ja432434a91e8f41d86d341ba889c217&oe=543222A4",
+                  }
   /user/contacts:
     get:
       tags:
@@ -575,11 +840,33 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "5491122223333@s.whatsapp.net": { "BusinessName": "", "FirstName": "", "Found": true, "FullName": "", "PushName": "FOP2" }, "549113334444@s.whatsapp.net": { "BusinessName": "", "FirstName": "", "Found": true, "FullName": "", "PushName": "Asternic" } } }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "5491122223333@s.whatsapp.net":
+                          {
+                            "BusinessName": "",
+                            "FirstName": "",
+                            "Found": true,
+                            "FullName": "",
+                            "PushName": "FOP2",
+                          },
+                        "549113334444@s.whatsapp.net":
+                          {
+                            "BusinessName": "",
+                            "FirstName": "",
+                            "Found": true,
+                            "FullName": "",
+                            "PushName": "Asternic",
+                          },
+                      },
+                  }
   /chat/delete:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Deletes a message sent by user
       description: Deletes a messages sent by the same user
       security:
@@ -589,7 +876,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/DeleteMessage'
+              $ref: "#/definitions/DeleteMessage"
 
       responses:
         200:
@@ -597,11 +884,16 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Message deleted" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Message deleted" },
+                    "success": true,
+                  }
   /chat/markread:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Marks a message as read
       description: Marks one or more received messages as read
       security:
@@ -611,7 +903,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/Markread'
+              $ref: "#/definitions/Markread"
 
       responses:
         200:
@@ -619,11 +911,16 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Message(s) marked as read" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Message(s) marked as read" },
+                    "success": true,
+                  }
   /chat/react:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Reacts to a message
       description: Sends a reaction to some message. Phone, Body and Id are mandatory. If reaction is for your own message, prefix Phone with 'me:'. Body should be the reaction emoji.
       security:
@@ -633,7 +930,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/ReactionText'
+              $ref: "#/definitions/ReactionText"
 
       responses:
         200:
@@ -641,11 +938,21 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"3EB06F9067F80BAB89FF","Timestamp":"2022-05-10T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "3EB06F9067F80BAB89FF",
+                        "Timestamp": "2022-05-10T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/text:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Sends a text message
       description: Sends a text message. Phone and Body are mandatory. If no Id is supplied, a random one will be generated. ContextInfo is optional and used when repyling to some message. StanzaId is the message id we are replying to and participant who wrote that message. If sending a new message, ContextInfo can be ommited altogether.
       security:
@@ -655,7 +962,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageText'
+              $ref: "#/definitions/MessageText"
 
       responses:
         200:
@@ -663,7 +970,17 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/edit:
     post:
       tags:
@@ -734,7 +1051,7 @@ paths:
   /chat/send/image:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Sends an image/picture message
       description: Sends an image message (must be base64 encoded in image/png or image/jpeg formats)
       security:
@@ -744,7 +1061,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageImage'
+              $ref: "#/definitions/MessageImage"
 
       responses:
         200:
@@ -752,11 +1069,21 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/audio:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Sends an audio message
       description: Sends an audio message (must be base64 encoded in opus format, mime type audio/ogg)
       security:
@@ -766,7 +1093,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageAudio'
+              $ref: "#/definitions/MessageAudio"
 
       responses:
         200:
@@ -774,11 +1101,21 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/document:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Sends a document message
       description: Sends any document (must be base64 encoded using application/octet-stream mime)
       security:
@@ -788,7 +1125,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageDocument'
+              $ref: "#/definitions/MessageDocument"
 
       responses:
         200:
@@ -796,12 +1133,22 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/template:
     post:
       tags:
-        - Chat 
-      summary: Sends a template message 
+        - Chat
+      summary: Sends a template message
       description: Sends a template message, that can contain quick reply buttons, url buttons and call buttons
       security:
         - ApiKeyAuth: []
@@ -810,7 +1157,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageTemplate'
+              $ref: "#/definitions/MessageTemplate"
 
       responses:
         200:
@@ -818,11 +1165,21 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/video:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Sends a video message
       description: Sends a video message (must be base64 encoded in video/mp4 or video/3gpp format. Only H.264 video codec and AAC audio codec is supported.)
       security:
@@ -832,7 +1189,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageVideo'
+              $ref: "#/definitions/MessageVideo"
 
       responses:
         200:
@@ -840,11 +1197,21 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/sticker:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Sends a sticker message
       description: Sends a sticker message (must be base64 encoded in image/webp format)
       security:
@@ -854,7 +1221,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageSticker'
+              $ref: "#/definitions/MessageSticker"
 
       responses:
         200:
@@ -862,11 +1229,21 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/location:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Sends a location message
       description: Sends a location message
       security:
@@ -876,7 +1253,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageLocation'
+              $ref: "#/definitions/MessageLocation"
 
       responses:
         200:
@@ -884,11 +1261,21 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/contact:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Sends a contact message
       description: Sends a contact message in VCARD format
       security:
@@ -898,7 +1285,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageContact'
+              $ref: "#/definitions/MessageContact"
 
       responses:
         200:
@@ -906,7 +1293,17 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/buttons:
     post:
       tags:
@@ -920,14 +1317,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageButtons'
+              $ref: "#/definitions/MessageButtons"
       responses:
         200:
           description: Response
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/list:
     post:
       tags:
@@ -941,14 +1348,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessageList'
+              $ref: "#/definitions/MessageList"
       responses:
         200:
           description: Response
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/send/poll:
     post:
       tags:
@@ -962,18 +1379,28 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/MessagePoll'
+              $ref: "#/definitions/MessagePoll"
       responses:
         200:
           description: Response
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Details":"Sent","Id":"90B2F8B13FAC8A9CF6B06E99C7834DC5","Timestamp":"2022-04-20T12:49:08-03:00"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Sent",
+                        "Id": "90B2F8B13FAC8A9CF6B06E99C7834DC5",
+                        "Timestamp": "2022-04-20T12:49:08-03:00",
+                      },
+                    "success": true,
+                  }
   /chat/downloadimage:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Downloads Image from message
       description: Downloads an Image from a message and returns it Base64 media encoded
       security:
@@ -983,7 +1410,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/DownloadImage'
+              $ref: "#/definitions/DownloadImage"
 
       responses:
         200:
@@ -991,11 +1418,20 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Data":"data:image/jpeg;base64,iVBORw0KGgoA5CYII...=","Mimetype":"image/jpeg"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Data": "data:image/jpeg;base64,iVBORw0KGgoA5CYII...=",
+                        "Mimetype": "image/jpeg",
+                      },
+                    "success": true,
+                  }
   /chat/downloadvideo:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Downloads Video from message
       description: Downloads a Video from a message and returns it Base64 media encoded
       security:
@@ -1005,7 +1441,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/DownloadImage'
+              $ref: "#/definitions/DownloadImage"
 
       responses:
         200:
@@ -1013,11 +1449,20 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Data":"data:video/mp4;base64,iVBORw0KGgoA5CYII...=","Mimetype":"video/mp4"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Data": "data:video/mp4;base64,iVBORw0KGgoA5CYII...=",
+                        "Mimetype": "video/mp4",
+                      },
+                    "success": true,
+                  }
   /chat/downloaddocument:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Downloads Document from message
       description: Downloads a Document from a message and returns it Base64 media encoded
       security:
@@ -1027,7 +1472,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/DownloadImage'
+              $ref: "#/definitions/DownloadImage"
 
       responses:
         200:
@@ -1035,11 +1480,51 @@ paths:
           content:
             application/json:
               schema:
-                example: {"code":200,"data":{"Data":"data:application/pdf;base64,iVBORw0KGgoA5CYII...=","Mimetype":"application/pdf"},"success":true}
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Data": "data:application/pdf;base64,iVBORw0KGgoA5CYII...=",
+                        "Mimetype": "application/pdf",
+                      },
+                    "success": true,
+                  }
+  /chat/downloadaudio:
+    post:
+      tags:
+        - Chat
+      summary: Downloads Audio from message
+      description: Downloads an Audio from a message and returns it Base64 media encoded
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/definitions/DownloadImage"
+
+      responses:
+        200:
+          description: Response
+          content:
+            application/json:
+              schema:
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Data": "data:audio/ogg;base64,iVBORw0KGgoA5CYII...=",
+                        "Mimetype": "audio/ogg; codecs=opus",
+                      },
+                    "success": true,
+                  }
   /chat/presence:
     post:
       tags:
-        - Chat 
+        - Chat
       summary: Sets chat presence
       description: Sends indication if you are writing or not (state could be either "composing" or "paused"). Optional Media can be set to "audio" for indicating recording a message
       security:
@@ -1049,7 +1534,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/ChatPresence'
+              $ref: "#/definitions/ChatPresence"
 
       responses:
         200:
@@ -1057,7 +1542,12 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Chat presence set successfuly" }, "success": true } 
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Chat presence set successfuly" },
+                    "success": true,
+                  }
   /chat/history:
     get:
       tags:
@@ -1101,7 +1591,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/definitions/HistoryMessage'
+                      $ref: "#/definitions/HistoryMessage"
                 example:
                   code: 200
                   success: true
@@ -1129,19 +1619,34 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 400, "error": "chat_jid is required", "success": false }
+                example:
+                  {
+                    "code": 400,
+                    "error": "chat_jid is required",
+                    "success": false,
+                  }
         501:
           description: Not implemented - message history is disabled
           content:
             application/json:
               schema:
-                example: { "code": 501, "error": "message history is disabled", "success": false }
+                example:
+                  {
+                    "code": 501,
+                    "error": "message history is disabled",
+                    "success": false,
+                  }
         500:
           description: Internal server error
           content:
             application/json:
               schema:
-                example: { "code": 500, "error": "failed to get message history", "success": false }
+                example:
+                  {
+                    "code": 500,
+                    "error": "failed to get message history",
+                    "success": false,
+                  }
   /group/create:
     post:
       tags:
@@ -1155,14 +1660,46 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/CreateGroup'
+              $ref: "#/definitions/CreateGroup"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "AnnounceVersionID": "1234567890", "DisappearingTimer": 0, "GroupCreated": "2023-12-01T10:00:00Z", "IsAnnounce": false, "IsEphemeral": false, "IsLocked": false, "JID": "120363123456789@g.us", "Name": "My New Group", "NameSetAt": "2023-12-01T10:00:00Z", "NameSetBy": "5491155554444@s.whatsapp.net", "OwnerJID": "5491155554444@s.whatsapp.net", "ParticipantVersionID": "1234567890", "Participants": [{"IsAdmin": true, "IsSuperAdmin": true, "JID": "5491155554444@s.whatsapp.net"}, {"IsAdmin": false, "IsSuperAdmin": false, "JID": "5491155553333@s.whatsapp.net"}] }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "AnnounceVersionID": "1234567890",
+                        "DisappearingTimer": 0,
+                        "GroupCreated": "2023-12-01T10:00:00Z",
+                        "IsAnnounce": false,
+                        "IsEphemeral": false,
+                        "IsLocked": false,
+                        "JID": "120363123456789@g.us",
+                        "Name": "My New Group",
+                        "NameSetAt": "2023-12-01T10:00:00Z",
+                        "NameSetBy": "5491155554444@s.whatsapp.net",
+                        "OwnerJID": "5491155554444@s.whatsapp.net",
+                        "ParticipantVersionID": "1234567890",
+                        "Participants":
+                          [
+                            {
+                              "IsAdmin": true,
+                              "IsSuperAdmin": true,
+                              "JID": "5491155554444@s.whatsapp.net",
+                            },
+                            {
+                              "IsAdmin": false,
+                              "IsSuperAdmin": false,
+                              "JID": "5491155553333@s.whatsapp.net",
+                            },
+                          ],
+                      },
+                    "success": true,
+                  }
   /group/locked:
     post:
       tags:
@@ -1176,14 +1713,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/GroupLocked'
+              $ref: "#/definitions/GroupLocked"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Group locked setting updated successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Group locked setting updated successfully",
+                      },
+                    "success": true,
+                  }
   /group/ephemeral:
     post:
       tags:
@@ -1197,14 +1742,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/GroupEphemeral'
+              $ref: "#/definitions/GroupEphemeral"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Disappearing timer set successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      { "Details": "Disappearing timer set successfully" },
+                    "success": true,
+                  }
   /group/photo/remove:
     post:
       tags:
@@ -1218,18 +1769,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/RemoveGroupPhoto'
+              $ref: "#/definitions/RemoveGroupPhoto"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Group photo removed successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Group photo removed successfully" },
+                    "success": true,
+                  }
   /group/list:
     get:
       tags:
-        - Group 
+        - Group
       summary: List subscribed groups
       description: Returns complete list of subscribed groups
       security:
@@ -1241,11 +1797,57 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Groups": [ { "AnnounceVersionID": "1650572126123738", "DisappearingTimer": 0, "GroupCreated": "2022-04-21T17:15:26-03:00", "IsAnnounce": false, "IsEphemeral": false, "IsLocked": false, "JID": "120362023605733675@g.us", "Name": "Super Group", "NameSetAt": "2022-04-21T17:15:26-03:00", "NameSetBy": "5491155554444@s.whatsapp.net", "OwnerJID": "5491155554444@s.whatsapp.net", "ParticipantVersionID": "1650234126145738", "Participants": [ { "IsAdmin": true, "IsSuperAdmin": true, "JID": "5491155554444@s.whatsapp.net" }, { "IsAdmin": false, "IsSuperAdmin": false, "JID": "5491155553333@s.whatsapp.net" }, { "IsAdmin": false, "IsSuperAdmin": false, "JID": "5491155552222@s.whatsapp.net" } ], "Topic": "", "TopicID": "", "TopicSetAt": "0001-01-01T00:00:00Z", "TopicSetBy": "" } ] }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Groups":
+                          [
+                            {
+                              "AnnounceVersionID": "1650572126123738",
+                              "DisappearingTimer": 0,
+                              "GroupCreated": "2022-04-21T17:15:26-03:00",
+                              "IsAnnounce": false,
+                              "IsEphemeral": false,
+                              "IsLocked": false,
+                              "JID": "120362023605733675@g.us",
+                              "Name": "Super Group",
+                              "NameSetAt": "2022-04-21T17:15:26-03:00",
+                              "NameSetBy": "5491155554444@s.whatsapp.net",
+                              "OwnerJID": "5491155554444@s.whatsapp.net",
+                              "ParticipantVersionID": "1650234126145738",
+                              "Participants":
+                                [
+                                  {
+                                    "IsAdmin": true,
+                                    "IsSuperAdmin": true,
+                                    "JID": "5491155554444@s.whatsapp.net",
+                                  },
+                                  {
+                                    "IsAdmin": false,
+                                    "IsSuperAdmin": false,
+                                    "JID": "5491155553333@s.whatsapp.net",
+                                  },
+                                  {
+                                    "IsAdmin": false,
+                                    "IsSuperAdmin": false,
+                                    "JID": "5491155552222@s.whatsapp.net",
+                                  },
+                                ],
+                              "Topic": "",
+                              "TopicID": "",
+                              "TopicSetAt": "0001-01-01T00:00:00Z",
+                              "TopicSetBy": "",
+                            },
+                          ],
+                      },
+                    "success": true,
+                  }
   /group/invitelink:
     get:
       tags:
-        - Group 
+        - Group
       summary: Get Group Invite Link
       description: Gets the invite link for a group, optionally resetting it to create a new/different one
       security:
@@ -1269,11 +1871,19 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "InviteLink": "https://chat.whatsapp.com/HffXhYmzzyJGec61oqMXiz" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "InviteLink": "https://chat.whatsapp.com/HffXhYmzzyJGec61oqMXiz",
+                      },
+                    "success": true,
+                  }
   /group/info:
     get:
       tags:
-        - Group 
+        - Group
       summary: Gets group information
       description: Retrieves information about a specific group
       security:
@@ -1291,11 +1901,52 @@ paths:
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "AnnounceVersionID": "1650572126123738", "DisappearingTimer": 0, "GroupCreated": "2022-04-21T17:15:26-03:00", "IsAnnounce": false, "IsEphemeral": false, "IsLocked": false, "JID": "120362023605733675@g.us", "Name": "Super Group", "NameSetAt": "2022-04-21T17:15:26-03:00", "NameSetBy": "5491155554444@s.whatsapp.net", "OwnerJID": "5491155554444@s.whatsapp.net", "ParticipantVersionID": "1650234126145738", "Participants": [ { "IsAdmin": true, "IsSuperAdmin": true, "JID": "5491155554444@s.whatsapp.net" }, { "IsAdmin": false, "IsSuperAdmin": false, "JID": "5491155553333@s.whatsapp.net" }, { "IsAdmin": false, "IsSuperAdmin": false, "JID": "5491155552222@s.whatsapp.net" } ], "Topic": "", "TopicID": "", "TopicSetAt": "0001-01-01T00:00:00Z", "TopicSetBy": "" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "AnnounceVersionID": "1650572126123738",
+                        "DisappearingTimer": 0,
+                        "GroupCreated": "2022-04-21T17:15:26-03:00",
+                        "IsAnnounce": false,
+                        "IsEphemeral": false,
+                        "IsLocked": false,
+                        "JID": "120362023605733675@g.us",
+                        "Name": "Super Group",
+                        "NameSetAt": "2022-04-21T17:15:26-03:00",
+                        "NameSetBy": "5491155554444@s.whatsapp.net",
+                        "OwnerJID": "5491155554444@s.whatsapp.net",
+                        "ParticipantVersionID": "1650234126145738",
+                        "Participants":
+                          [
+                            {
+                              "IsAdmin": true,
+                              "IsSuperAdmin": true,
+                              "JID": "5491155554444@s.whatsapp.net",
+                            },
+                            {
+                              "IsAdmin": false,
+                              "IsSuperAdmin": false,
+                              "JID": "5491155553333@s.whatsapp.net",
+                            },
+                            {
+                              "IsAdmin": false,
+                              "IsSuperAdmin": false,
+                              "JID": "5491155552222@s.whatsapp.net",
+                            },
+                          ],
+                        "Topic": "",
+                        "TopicID": "",
+                        "TopicSetAt": "0001-01-01T00:00:00Z",
+                        "TopicSetBy": "",
+                      },
+                    "success": true,
+                  }
   /group/photo:
     post:
       tags:
-        - Group 
+        - Group
       summary: Changes group photo
       description: Allows you to change a group photo/image. Returns the Picture ID number
       security:
@@ -1305,15 +1956,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/GroupPhoto'
- 
+              $ref: "#/definitions/GroupPhoto"
+
       responses:
         200:
           description: Response
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Group Photo set successfully", "PictureID": "1222332123" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "Details": "Group Photo set successfully",
+                        "PictureID": "1222332123",
+                      },
+                    "success": true,
+                  }
   /group/leave:
     post:
       tags:
@@ -1327,14 +1987,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/GroupLeave'
+              $ref: "#/definitions/GroupLeave"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Left group successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Left group successfully" },
+                    "success": true,
+                  }
   /group/name:
     post:
       tags:
@@ -1348,14 +2013,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/GroupName'
+              $ref: "#/definitions/GroupName"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Group Name set successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Group Name set successfully" },
+                    "success": true,
+                  }
   /group/topic:
     post:
       tags:
@@ -1369,14 +2039,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/GroupTopic'
+              $ref: "#/definitions/GroupTopic"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Group Topic set successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Group Topic set successfully" },
+                    "success": true,
+                  }
   /group/announce:
     post:
       tags:
@@ -1390,14 +2065,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/GroupAnnounce'
+              $ref: "#/definitions/GroupAnnounce"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Group Announce mode set successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      { "Details": "Group Announce mode set successfully" },
+                    "success": true,
+                  }
   /group/join:
     post:
       tags:
@@ -1411,14 +2092,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/GroupJoin'
+              $ref: "#/definitions/GroupJoin"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Joined group successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Joined group successfully" },
+                    "success": true,
+                  }
   /group/inviteinfo:
     post:
       tags:
@@ -1432,14 +2118,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/GroupInviteInfo'
+              $ref: "#/definitions/GroupInviteInfo"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "InviteInfo": { "GroupName": "Test Group", "GroupJID": "120363312246943103@g.us" } }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data":
+                      {
+                        "InviteInfo":
+                          {
+                            "GroupName": "Test Group",
+                            "GroupJID": "120363312246943103@g.us",
+                          },
+                      },
+                    "success": true,
+                  }
   /group/updateparticipants:
     post:
       tags:
@@ -1453,14 +2151,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/definitions/UpdateGroupParticipants'
+              $ref: "#/definitions/UpdateGroupParticipants"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                example: { "code": 200, "data": { "Details": "Participants updated successfully" }, "success": true }
+                example:
+                  {
+                    "code": 200,
+                    "data": { "Details": "Participants updated successfully" },
+                    "success": true,
+                  }
 
 definitions:
   User:
@@ -1672,7 +2375,7 @@ definitions:
     properties:
       Subscribe:
         type: string
-        example: ["Message","ChatPresence"]
+        example: ["Message", "ChatPresence"]
       Immediate:
         type: boolean
   DownloadImage:
@@ -1700,7 +2403,7 @@ definitions:
         type: number
   ChatPresence:
     type: object
-    required: 
+    required:
       - Phone
       - State
     properties:
@@ -1710,7 +2413,7 @@ definitions:
       State:
         type: string
         example: composing
-      Media: 
+      Media:
         type: string
         example: audio
   UserPresence:
@@ -1723,7 +2426,7 @@ definitions:
         example: available
   MessageContact:
     type: object
-    required: 
+    required:
       - Phone
       - Name
       - Vcard
@@ -1746,17 +2449,16 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId: 
+          StanzaId:
             type: string
-            example: "3EB06F9067F80BAB89FF" 
-          Participant: 
+            example: "3EB06F9067F80BAB89FF"
+          Participant:
             type: string
             example: "5491155553935@s.whatsapp.net"
 
-
   MessageLocation:
     type: object
-    required: 
+    required:
       - Phone
       - Latitude
       - Longitude
@@ -1782,18 +2484,18 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId: 
+          StanzaId:
             type: string
-            example: "3EB06F9067F80BAB89FF" 
-          Participant: 
+            example: "3EB06F9067F80BAB89FF"
+          Participant:
             type: string
             example: "5491155553935@s.whatsapp.net"
   ReactionText:
     type: object
-    required: 
+    required:
       - Phone
       - Body
-      - Id 
+      - Id
     properties:
       Phone:
         type: string
@@ -1888,10 +2590,10 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId: 
+          StanzaId:
             type: string
-            example: "3EB06F9067F80BAB89FF" 
-          Participant: 
+            example: "3EB06F9067F80BAB89FF"
+          Participant:
             type: string
             example: "5491155553935@s.whatsapp.net"
 
@@ -1916,17 +2618,17 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId: 
+          StanzaId:
             type: string
-            example: "3EB06F9067F80BAB89FF" 
-          Participant: 
+            example: "3EB06F9067F80BAB89FF"
+          Participant:
             type: string
             example: "5491155553935@s.whatsapp.net"
   MessageImage:
     type: object
-    required: 
+    required:
       - Phone
-      - Image 
+      - Image
     properties:
       Phone:
         type: string
@@ -1946,15 +2648,15 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId: 
+          StanzaId:
             type: string
-            example: "3EB06F9067F80BAB89FF" 
-          Participant: 
+            example: "3EB06F9067F80BAB89FF"
+          Participant:
             type: string
             example: "5491155553935@s.whatsapp.net"
   MessageAudio:
     type: object
-    required: 
+    required:
       - Phone
       - Audio
     properties:
@@ -1973,17 +2675,17 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId: 
+          StanzaId:
             type: string
-            example: "3EB06F9067F80BAB89FF" 
-          Participant: 
+            example: "3EB06F9067F80BAB89FF"
+          Participant:
             type: string
             example: "5491155553935@s.whatsapp.net"
   MessageVideo:
     type: object
-    required: 
+    required:
       - Phone
-      - Video 
+      - Video
     properties:
       Phone:
         type: string
@@ -2006,15 +2708,15 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId: 
+          StanzaId:
             type: string
-            example: "3EB06F9067F80BAB89FF" 
-          Participant: 
+            example: "3EB06F9067F80BAB89FF"
+          Participant:
             type: string
             example: "5491155553935@s.whatsapp.net"
   MessageSticker:
     type: object
-    required: 
+    required:
       - Phone
       - Sticker
     properties:
@@ -2036,20 +2738,19 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId: 
+          StanzaId:
             type: string
-            example: "3EB06F9067F80BAB89FF" 
-          Participant: 
+            example: "3EB06F9067F80BAB89FF"
+          Participant:
             type: string
             example: "5491155553935@s.whatsapp.net"
- 
 
   MessageDocument:
     type: object
-    required: 
+    required:
       - Phone
-      - Document 
-      - FileName 
+      - Document
+      - FileName
     properties:
       Phone:
         type: string
@@ -2077,9 +2778,9 @@ definitions:
             example: "5491155553935@s.whatsapp.net"
   MessageTemplate:
     type: object
-    required: 
+    required:
       - Phone
-      - Content 
+      - Content
     properties:
       Phone:
         type: string
@@ -2091,14 +2792,28 @@ definitions:
         type: string
         example: Text below title, above buttons
       Buttons:
-          type: object
-          example: [{"DisplayText":"Yes","Type":"quickreply"},{"DisplayText":"No","Type":"quickreply"},{"DisplayText":"Visit Site","Type":"url","Url":"https://www.fop2.com"},{"DisplayText":"Callme","Type":"call","PhoneNumber":"1155553934"}]
-          properties:
-            DisplayText:
-              type: string
-              example: Text for Button
-            Type:
-              type: quickreply|url|call
+        type: object
+        example:
+          [
+            { "DisplayText": "Yes", "Type": "quickreply" },
+            { "DisplayText": "No", "Type": "quickreply" },
+            {
+              "DisplayText": "Visit Site",
+              "Type": "url",
+              "Url": "https://www.fop2.com",
+            },
+            {
+              "DisplayText": "Callme",
+              "Type": "call",
+              "PhoneNumber": "1155553934",
+            },
+          ]
+        properties:
+          DisplayText:
+            type: string
+            example: Text for Button
+          Type:
+            type: quickreply|url|call
       Id:
         type: string
         example: "ABCDABCD1234"
@@ -2130,7 +2845,7 @@ definitions:
     properties:
       Id:
         type: object
-        example: ["AABBCC11223344","DDEEFF55667788"]
+        example: ["AABBCC11223344", "DDEEFF55667788"]
       Chat:
         type: string
         example: 5491155553934.0:1@s.whatsapp.net
@@ -2152,7 +2867,7 @@ definitions:
     properties:
       Phone:
         type: object
-        example: ["5491155553934","5491155553935"]
+        example: ["5491155553934", "5491155553935"]
   Checkavatar:
     type: object
     required:
@@ -2160,7 +2875,7 @@ definitions:
       - Preview
     properties:
       Phone:
-        type: string 
+        type: string
         example: "5491155553934"
       Preview:
         type: bool
@@ -2305,7 +3020,7 @@ definitions:
         items:
           type: string
           description: List of participant JIDs (e.g., 5491112345678@s.whatsapp.net or 5491112345678)
-        example: [ "5491112345678", "5491123456789@s.whatsapp.net" ]
+        example: ["5491112345678", "5491123456789@s.whatsapp.net"]
 
   CreateGroup:
     type: object
@@ -2322,7 +3037,7 @@ definitions:
         items:
           type: string
           description: List of participant phone numbers (without country code prefix symbols)
-        example: [ "5491112345678", "5491123456789" ]
+        example: ["5491112345678", "5491123456789"]
 
   GroupLocked:
     type: object
