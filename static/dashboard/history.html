@@ -285,6 +285,28 @@
         margin: 5px 0;
         font-size: 11px;
       }
+
+      .search-highlight {
+        background-color: #fff3cd;
+        padding: 1px 2px;
+        border-radius: 2px;
+        font-weight: 600;
+      }
+
+      .search-container .ui.input {
+        margin: 0;
+      }
+
+      .search-container .ui.input input {
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        padding: 8px 12px 8px 35px;
+      }
+
+      .search-container .ui.input input:focus {
+        border-color: #2196f3;
+        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+      }
     </style>
   </head>
   <body>
@@ -334,6 +356,25 @@
           <select class="ui fluid dropdown" id="instanceSelect">
             <option value="">Selecione uma instância...</option>
           </select>
+        </div>
+
+        <div
+          class="search-container"
+          style="
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            background: #fafafa;
+          "
+        >
+          <div class="ui fluid icon input">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Buscar chats..."
+              style="font-size: 12px"
+            />
+            <i class="search icon"></i>
+          </div>
         </div>
 
         <div class="chat-list" id="chatList">
@@ -391,6 +432,8 @@
       let sessionInfo = {};
       let allContacts = {};
       let groupsInfo = {};
+      let currentChats = []; // Store current instance chats for filtering
+      let searchTerm = ""; // Current search term
 
       $(document).ready(function () {
         // Initialize dropdown and checkbox
@@ -449,6 +492,18 @@
             clearChatView();
           }
         });
+
+        // Search input handler
+        $("#searchInput").on("input", function () {
+          searchTerm = $(this).val().toLowerCase().trim();
+          filterChats();
+        });
+
+        // Clear search when instance changes
+        $("#instanceSelect").on("change", function () {
+          $("#searchInput").val("");
+          searchTerm = "";
+        });
       });
 
       // Function to refresh the page and reinitialize everything
@@ -461,9 +516,12 @@
         sessionInfo = {};
         allContacts = {};
         groupsInfo = {};
+        currentChats = [];
+        searchTerm = "";
 
         // Reset UI
         $("#instanceSelect").dropdown("clear");
+        $("#searchInput").val("");
         $("#chatList").html(
           '<div class="ui message"><p>Selecione uma instância para visualizar os chats</p></div>'
         );
@@ -646,6 +704,7 @@
 
       function loadChatsForInstance(instance) {
         const chats = instanceChatMap[instance] || [];
+        currentChats = chats; // Store chats for filtering
 
         if (chats.length === 0) {
           $("#chatList").html(
@@ -658,9 +717,61 @@
         renderChatList(instance, chats);
       }
 
+      function filterChats() {
+        if (!currentInstance || currentChats.length === 0) {
+          return;
+        }
+
+        let filteredChats = currentChats;
+
+        if (searchTerm) {
+          filteredChats = currentChats.filter((chat) => {
+            const chatJid = typeof chat === "string" ? chat : chat.chat_jid;
+            const displayName = getDisplayName(chatJid).toLowerCase();
+
+            // Search in display name, JID, or contact info
+            return (
+              displayName.includes(searchTerm) ||
+              chatJid.toLowerCase().includes(searchTerm) ||
+              (allContacts[chatJid] &&
+                (allContacts[chatJid].PushName?.toLowerCase().includes(
+                  searchTerm
+                ) ||
+                  allContacts[chatJid].FullName?.toLowerCase().includes(
+                    searchTerm
+                  ) ||
+                  allContacts[chatJid].FirstName?.toLowerCase().includes(
+                    searchTerm
+                  )))
+            );
+          });
+        }
+
+        renderChatList(currentInstance, filteredChats);
+      }
+
       function renderChatList(instance, chats) {
         const chatList = $("#chatList");
         chatList.empty();
+
+        // Show message if no chats found (either no chats or no search results)
+        if (chats.length === 0) {
+          if (searchTerm) {
+            chatList.html(`
+               <div class="ui message">
+                 <p>Nenhum chat encontrado para "${searchTerm}"</p>
+                 <small style="color: #666;">Tente um termo diferente</small>
+               </div>
+             `);
+          } else {
+            chatList.html(`
+               <div class="ui message">
+                 <p>Nenhum chat encontrado para esta instância</p>
+               </div>
+             `);
+          }
+          return;
+        }
 
         chats.forEach((chat) => {
           // Handle both new format (object) and old format (string) for backward compatibility
@@ -699,22 +810,30 @@
           // Format timestamp
           const timeStr = lastUpdated ? lastUpdated.toLocaleString() : "";
 
+          // Highlight search terms in display name and JID
+          const highlightedDisplayName = searchTerm
+            ? highlightSearchTerm(displayName, searchTerm)
+            : displayName;
+          const highlightedJid = searchTerm
+            ? highlightSearchTerm(chatJid, searchTerm)
+            : chatJid;
+
           const chatItem = $(`
-      <div class="chat-item" data-chat-jid="${chatJid}">
-        <div class="chat-name">
-          <i class="${isGroup ? "users" : "user"} icon"></i>
-          ${displayName}
+       <div class="chat-item" data-chat-jid="${chatJid}">
+         <div class="chat-name">
+           <i class="${isGroup ? "users" : "user"} icon"></i>
+           ${highlightedDisplayName}
+         </div>
+         <div class="chat-jid" style="font-size: 11px; color: #888; margin-top: 2px;">${highlightedJid}</div>
+         ${
+           timeStr
+             ? `<div class="chat-timestamp" style="font-size: 11px; color: #999; margin-top: 4px;">
+            <i class="clock icon"></i>${timeStr}
+         </div>`
+             : ""
+         }
         </div>
-        <div class="chat-jid" style="font-size: 11px; color: #888; margin-top: 2px;">${chatJid}</div>
-        ${
-          timeStr
-            ? `<div class="chat-timestamp" style="font-size: 11px; color: #999; margin-top: 4px;">
-          <i class="clock icon"></i>${timeStr}
-        </div>`
-            : ""
-        }
-      </div>
-    `);
+      `);
 
           chatItem.click(function () {
             $(".chat-item").removeClass("active");
@@ -998,6 +1117,17 @@
         }
 
         return getDisplayName(senderJid);
+      }
+
+      // Helper function to highlight search terms in text
+      function highlightSearchTerm(text, term) {
+        if (!term || !text) return text;
+
+        const regex = new RegExp(
+          `(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+          "gi"
+        );
+        return text.replace(regex, '<span class="search-highlight">$1</span>');
       }
     </script>
   </body>
