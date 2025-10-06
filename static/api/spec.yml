@@ -4,7 +4,7 @@ info:
   description: "WUZAPI implements a multi user and multi device REST API for WhatsApp.\n\n<h2>Authentication</h2><ul><li>Standard Endpoints: Include the token header with a valid user token (matches tokens stored in the users database table).</li><li>Admin Endpoints: Use the Authorization header with the admin token (set in .env as WUZAPI_ADMIN_TOKEN).</li></ul><h2>Admin Setup:</h2>You can manage users and do some tests by using the builtin dashboard [here](/dashboard).<h3>Add a Sample User via API</h3>Run this command to create a test user:<pre><code>curl -X POST http://localhost:8080/admin/users \\ \n-H \"Authorization: $WUZAPI_ADMIN_TOKEN\" \\ \n-H \"Content-Type: application/json\" \\ \n-d '{\"name\": \"John\", \"token\": \"Z1234ABCCXD\"}' </code> </pre>\n\n<h2>Webhook Configuration</h2>To receive WhatsApp messages:<ul><li>Host your own server (to process incoming messages).</li><li>Set its URL as the webhook via the [webhook](#Webhook) API call.</li></ul><h2>Phone number format:</h2><ul><li>Required: Country code (e.g. <b>5491155553934</b> for Argentina</li><li>Do not prefix with a plus sign (+), as natively whatsapp requires no plus sign prefix.</li></ul>"
   version: "3.0.0"
   termsOfService: ""
-
+   
 schemes:
   - http
 
@@ -294,7 +294,7 @@ paths:
     get:
       tags:
         - Webhook
-      summary: Shows webhook
+      summary: Shows webhook 
       description: |
         Gets the configured webhook and subscribed events.
 
@@ -330,7 +330,7 @@ paths:
     post:
       tags:
         - Webhook
-      summary: Sets webhook
+      summary: Sets webhook 
       description: |
         Sets the webhook that will be used to POST information when messages are received and configures the events to subscribe to.
 
@@ -371,7 +371,7 @@ paths:
     delete:
       tags:
         - Webhook
-      summary: Deletes webhook
+      summary: Deletes webhook 
       description: Removes the configured webhook and clears events for the user
       security:
         - ApiKeyAuth: []
@@ -433,7 +433,7 @@ paths:
   /session/connect:
     post:
       tags:
-        - Session
+        - Session 
       summary: connects to WhatsApp servers
       description: "Initiates connection to WhatsApp servers.\n\nIf there is no previous session created, it will generate a QR code that can be retrieved via the [qr](#/Session/get_session_qr) API call.\n\nIf the optional Subscribe is supplied it will limit webhooks to the specified event types: Message,ReadReceipt,Presence,HistorySync,ChatPresence.\n\nIf no Subscribe is supplied it will subscribe to All events.\n\nIf Immediate is set to false, the action will wait for 10 seconds to retrieve actual connection status from whatsapp, otherwise it will return immediatly.\n\nWhen setting Immediate to true you should check for actual connection status after a few seconds via the [status](#/Session/get_session_status) API call as your connection might fail if the session was closed from another device."
       security:
@@ -467,9 +467,9 @@ paths:
   /session/disconnect:
     post:
       tags:
-        - Session
+        - Session 
       summary: disconnects from WhatsApp servers
-      description: Closes connection to WhatsApp servers. Session is not terminated, that means that calling connect again will reuse the previous session avoiding QR code scanning
+      description: Closes connection to WhatsApp servers. Session is not terminated, that means that calling connect again will reuse the previous session avoiding QR code scanning 
       security:
         - ApiKeyAuth: []
       responses:
@@ -487,8 +487,8 @@ paths:
   /session/logout:
     post:
       tags:
-        - Session
-      summary: Logs out from WhatsApp
+        - Session 
+      summary: Logs out from WhatsApp 
       description: Closes connection to WhatsApp servers and terminate session. That means that next time connect is issued, QR scan will be needed from phone to connect again
       security:
         - ApiKeyAuth: []
@@ -507,7 +507,7 @@ paths:
   /session/status:
     get:
       tags:
-        - Session
+        - Session 
       summary: Gets connection and session status
       description: Gets status from connection, including websocket connection and logged in status (session)
       security:
@@ -553,7 +553,7 @@ paths:
   /session/qr:
     get:
       tags:
-        - Session
+        - Session 
       summary: Gets QR code for scanning
       description: Gets QR code if the user is connected but not logged in. If the user is already logged in, QRCode will be empty.
       security:
@@ -989,7 +989,7 @@ paths:
   /chat/delete:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Deletes a message sent by user
       description: Deletes a messages sent by the same user
       security:
@@ -1016,7 +1016,7 @@ paths:
   /chat/markread:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Marks a message as read
       description: Marks one or more received messages as read
       security:
@@ -1043,7 +1043,7 @@ paths:
   /chat/react:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Reacts to a message
       description: Sends a reaction to some message. Phone, Body and Id are mandatory. If reaction is for your own message, prefix Phone with 'me:'. Body should be the reaction emoji.
       security:
@@ -1075,7 +1075,7 @@ paths:
   /chat/send/text:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Sends a text message
       description: Sends a text message. Phone and Body are mandatory. If no Id is supplied, a random one will be generated. ContextInfo is optional and used when repyling to some message. StanzaId is the message id we are replying to and participant who wrote that message. If sending a new message, ContextInfo can be ommited altogether.
       security:
@@ -1174,7 +1174,7 @@ paths:
   /chat/send/image:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Sends an image/picture message
       description: Sends an image message (must be base64 encoded in image/png or image/jpeg formats)
       security:
@@ -1206,7 +1206,7 @@ paths:
   /chat/send/audio:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Sends an audio message
       description: Sends an audio message (must be base64 encoded in opus format, mime type audio/ogg)
       security:
@@ -1238,7 +1238,7 @@ paths:
   /chat/send/document:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Sends a document message
       description: Sends any document (must be base64 encoded using application/octet-stream mime)
       security:
@@ -1270,8 +1270,8 @@ paths:
   /chat/send/template:
     post:
       tags:
-        - Chat
-      summary: Sends a template message
+        - Chat 
+      summary: Sends a template message 
       description: Sends a template message, that can contain quick reply buttons, url buttons and call buttons
       security:
         - ApiKeyAuth: []
@@ -1302,7 +1302,7 @@ paths:
   /chat/send/video:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Sends a video message
       description: Sends a video message (must be base64 encoded in video/mp4 or video/3gpp format. Only H.264 video codec and AAC audio codec is supported.)
       security:
@@ -1334,7 +1334,7 @@ paths:
   /chat/send/sticker:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Sends a sticker message
       description: Sends a sticker message (must be base64 encoded in image/webp format)
       security:
@@ -1366,7 +1366,7 @@ paths:
   /chat/send/location:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Sends a location message
       description: Sends a location message
       security:
@@ -1398,7 +1398,7 @@ paths:
   /chat/send/contact:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Sends a contact message
       description: Sends a contact message in VCARD format
       security:
@@ -1523,7 +1523,7 @@ paths:
   /chat/downloadimage:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Downloads Image from message
       description: Downloads an Image from a message and returns it Base64 media encoded
       security:
@@ -1554,7 +1554,7 @@ paths:
   /chat/downloadvideo:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Downloads Video from message
       description: Downloads a Video from a message and returns it Base64 media encoded
       security:
@@ -1585,7 +1585,7 @@ paths:
   /chat/downloaddocument:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Downloads Document from message
       description: Downloads a Document from a message and returns it Base64 media encoded
       security:
@@ -1647,7 +1647,7 @@ paths:
   /chat/presence:
     post:
       tags:
-        - Chat
+        - Chat 
       summary: Sets chat presence
       description: Sends indication if you are writing or not (state could be either "composing" or "paused"). Optional Media can be set to "audio" for indicating recording a message
       security:
@@ -1908,7 +1908,7 @@ paths:
   /group/list:
     get:
       tags:
-        - Group
+        - Group 
       summary: List subscribed groups
       description: Returns complete list of subscribed groups
       security:
@@ -1970,7 +1970,7 @@ paths:
   /group/invitelink:
     get:
       tags:
-        - Group
+        - Group 
       summary: Get Group Invite Link
       description: Gets the invite link for a group, optionally resetting it to create a new/different one
       security:
@@ -2006,7 +2006,7 @@ paths:
   /group/info:
     get:
       tags:
-        - Group
+        - Group 
       summary: Gets group information
       description: Retrieves information about a specific group
       security:
@@ -2069,7 +2069,7 @@ paths:
   /group/photo:
     post:
       tags:
-        - Group
+        - Group 
       summary: Changes group photo
       description: Allows you to change a group photo/image. Returns the Picture ID number
       security:
@@ -2080,7 +2080,7 @@ paths:
           application/json:
             schema:
               $ref: "#/definitions/GroupPhoto"
-
+ 
       responses:
         200:
           description: Response
@@ -2526,7 +2526,7 @@ definitions:
         type: number
   ChatPresence:
     type: object
-    required:
+    required: 
       - Phone
       - State
     properties:
@@ -2536,7 +2536,7 @@ definitions:
       State:
         type: string
         example: composing
-      Media:
+      Media: 
         type: string
         example: audio
   UserPresence:
@@ -2549,7 +2549,7 @@ definitions:
         example: available
   MessageContact:
     type: object
-    required:
+    required: 
       - Phone
       - Name
       - Vcard
@@ -2572,16 +2572,16 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId:
+          StanzaId: 
             type: string
-            example: "3EB06F9067F80BAB89FF"
-          Participant:
+            example: "3EB06F9067F80BAB89FF" 
+          Participant: 
             type: string
             example: "5491155553935@s.whatsapp.net"
 
   MessageLocation:
     type: object
-    required:
+    required: 
       - Phone
       - Latitude
       - Longitude
@@ -2607,18 +2607,18 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId:
+          StanzaId: 
             type: string
-            example: "3EB06F9067F80BAB89FF"
-          Participant:
+            example: "3EB06F9067F80BAB89FF" 
+          Participant: 
             type: string
             example: "5491155553935@s.whatsapp.net"
   ReactionText:
     type: object
-    required:
+    required: 
       - Phone
       - Body
-      - Id
+      - Id 
     properties:
       Phone:
         type: string
@@ -2713,10 +2713,10 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId:
+          StanzaId: 
             type: string
-            example: "3EB06F9067F80BAB89FF"
-          Participant:
+            example: "3EB06F9067F80BAB89FF" 
+          Participant: 
             type: string
             example: "5491155553935@s.whatsapp.net"
 
@@ -2741,17 +2741,17 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId:
+          StanzaId: 
             type: string
-            example: "3EB06F9067F80BAB89FF"
-          Participant:
+            example: "3EB06F9067F80BAB89FF" 
+          Participant: 
             type: string
             example: "5491155553935@s.whatsapp.net"
   MessageImage:
     type: object
-    required:
+    required: 
       - Phone
-      - Image
+      - Image 
     properties:
       Phone:
         type: string
@@ -2771,15 +2771,15 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId:
+          StanzaId: 
             type: string
-            example: "3EB06F9067F80BAB89FF"
-          Participant:
+            example: "3EB06F9067F80BAB89FF" 
+          Participant: 
             type: string
             example: "5491155553935@s.whatsapp.net"
   MessageAudio:
     type: object
-    required:
+    required: 
       - Phone
       - Audio
     properties:
@@ -2798,17 +2798,17 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId:
+          StanzaId: 
             type: string
-            example: "3EB06F9067F80BAB89FF"
-          Participant:
+            example: "3EB06F9067F80BAB89FF" 
+          Participant: 
             type: string
             example: "5491155553935@s.whatsapp.net"
   MessageVideo:
     type: object
-    required:
+    required: 
       - Phone
-      - Video
+      - Video 
     properties:
       Phone:
         type: string
@@ -2831,15 +2831,15 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId:
+          StanzaId: 
             type: string
-            example: "3EB06F9067F80BAB89FF"
-          Participant:
+            example: "3EB06F9067F80BAB89FF" 
+          Participant: 
             type: string
             example: "5491155553935@s.whatsapp.net"
   MessageSticker:
     type: object
-    required:
+    required: 
       - Phone
       - Sticker
     properties:
@@ -2861,19 +2861,19 @@ definitions:
           - StanzaId
           - Participant
         properties:
-          StanzaId:
+          StanzaId: 
             type: string
-            example: "3EB06F9067F80BAB89FF"
-          Participant:
+            example: "3EB06F9067F80BAB89FF" 
+          Participant: 
             type: string
             example: "5491155553935@s.whatsapp.net"
 
   MessageDocument:
     type: object
-    required:
+    required: 
       - Phone
-      - Document
-      - FileName
+      - Document 
+      - FileName 
     properties:
       Phone:
         type: string
@@ -2901,9 +2901,9 @@ definitions:
             example: "5491155553935@s.whatsapp.net"
   MessageTemplate:
     type: object
-    required:
+    required: 
       - Phone
-      - Content
+      - Content 
     properties:
       Phone:
         type: string
@@ -2915,7 +2915,7 @@ definitions:
         type: string
         example: Text below title, above buttons
       Buttons:
-        type: object
+          type: object
         example:
           [
             { "DisplayText": "Yes", "Type": "quickreply" },
@@ -2931,12 +2931,12 @@ definitions:
               "PhoneNumber": "1155553934",
             },
           ]
-        properties:
-          DisplayText:
-            type: string
-            example: Text for Button
-          Type:
-            type: quickreply|url|call
+          properties:
+            DisplayText:
+              type: string
+              example: Text for Button
+            Type:
+              type: quickreply|url|call
       Id:
         type: string
         example: "ABCDABCD1234"
@@ -2998,7 +2998,7 @@ definitions:
       - Preview
     properties:
       Phone:
-        type: string
+        type: string 
         example: "5491155553934"
       Preview:
         type: bool
